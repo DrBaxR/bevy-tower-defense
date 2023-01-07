@@ -4,22 +4,26 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 #[derive(Component)]
 struct Cursor;
 
-#[derive(Component)]
+#[derive(Reflect, Component)]
 struct Bullet {
-    trajectory: Vec3,
+    trajectory: Vec2,
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        camera_2d: Camera2d {
-            clear_color: ClearColorConfig::Custom(Color::BLACK),
+    commands.spawn((
+        Name::new("Camera"),
+        Camera2dBundle {
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::BLACK),
+            },
+            ..default()
         },
-        ..default()
-    });
+    ));
 }
 
 fn setup_entities(mut commands: Commands) {
     commands.spawn((
+        Name::new("Cursor"),
         SpriteBundle {
             sprite: Sprite {
                 color: Color::WHITE,
@@ -29,17 +33,34 @@ fn setup_entities(mut commands: Commands) {
             ..default()
         },
         Cursor,
-        Name::new("Cursor"),
     ));
 
-    commands.spawn((SpriteBundle {
-        sprite: Sprite {
-            color: Color::WHITE,
+    commands.spawn((
+        Name::new("Enemy"),
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::WHITE,
+                ..default()
+            },
+            transform: Transform::from_xyz(0., 0., 1.).with_scale(Vec3::new(30., 30., 1.)),
             ..default()
         },
-        transform: Transform::from_scale(Vec3::new(30., 30., 1.)),
-        ..default()
-    }, Name::new("Thing")));
+    ));
+
+    commands.spawn((
+        Name::new("Bullet"),
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::RED,
+                ..default()
+            },
+            transform: Transform::from_xyz(0., 0., 0.).with_scale(Vec3::new(10., 10., 1.)),
+            ..default()
+        },
+        Bullet {
+            trajectory: Vec2::new(50., 0.),
+        },
+    ));
 }
 
 fn move_cursor_to_mouse(
@@ -58,6 +79,15 @@ fn move_cursor_to_mouse(
                 0.,
             );
         }
+    }
+}
+
+fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &Bullet)>) {
+    for (mut transform, bullet) in bullets.iter_mut() {
+        transform.translation.x =
+            transform.translation.x + bullet.trajectory.x * time.delta_seconds();
+        transform.translation.y =
+            transform.translation.y + bullet.trajectory.y * time.delta_seconds();
     }
 }
 
@@ -80,5 +110,8 @@ fn main() {
                 .with_system(setup_entities),
         )
         .add_system(move_cursor_to_mouse)
+        .add_system(update_bullet_position)
+        // types for debugging in ui
+        .register_type::<Bullet>()
         .run();
 }
