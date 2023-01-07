@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -7,6 +9,11 @@ struct Cursor;
 #[derive(Reflect, Component)]
 struct Bullet {
     trajectory: Vec2,
+}
+
+#[derive(Reflect, Component)]
+struct Lifetime {
+    timer: Timer,
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -60,6 +67,9 @@ fn setup_entities(mut commands: Commands) {
         Bullet {
             trajectory: Vec2::new(50., 0.),
         },
+        Lifetime {
+            timer: Timer::new(Duration::from_millis(1000), TimerMode::Once),
+        },
     ));
 }
 
@@ -78,6 +88,16 @@ fn move_cursor_to_mouse(
                 position.y - window.height() / 2.,
                 0.,
             );
+        }
+    }
+}
+
+fn despawn_lifetime_entities(mut lifetimes: Query<(Entity, &mut Lifetime)>, time: Res<Time>, mut commands: Commands) {
+    for (entity, mut lifetime) in lifetimes.iter_mut() {
+        lifetime.timer.tick(time.delta());
+
+        if lifetime.timer.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }
@@ -111,7 +131,9 @@ fn main() {
         )
         .add_system(move_cursor_to_mouse)
         .add_system(update_bullet_position)
+        .add_system(despawn_lifetime_entities)
         // types for debugging in ui
         .register_type::<Bullet>()
+        .register_type::<Lifetime>()
         .run();
 }
