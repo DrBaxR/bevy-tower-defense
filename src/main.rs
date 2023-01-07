@@ -1,18 +1,24 @@
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 #[derive(Component)]
 struct Cursor;
 
-fn setup(mut commands: Commands) {
-    // camera
+#[derive(Component)]
+struct Bullet {
+    trajectory: Vec3,
+}
+
+fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         camera_2d: Camera2d {
             clear_color: ClearColorConfig::Custom(Color::BLACK),
         },
         ..default()
     });
+}
 
-    // other
+fn setup_entities(mut commands: Commands) {
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
@@ -23,18 +29,17 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         Cursor,
+        Name::new("Cursor"),
     ));
 
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::WHITE,
-                ..default()
-            },
-            transform: Transform::from_scale(Vec3::new(100., 100., 1.)),
+    commands.spawn((SpriteBundle {
+        sprite: Sprite {
+            color: Color::WHITE,
             ..default()
         },
-    ));
+        transform: Transform::from_scale(Vec3::new(30., 30., 1.)),
+        ..default()
+    }, Name::new("Thing")));
 }
 
 fn move_cursor_to_mouse(
@@ -68,7 +73,12 @@ fn main() {
             },
             ..default()
         }))
-        .add_startup_system(setup)
+        .add_plugin(WorldInspectorPlugin)
+        .add_startup_system_set(
+            SystemSet::new()
+                .with_system(setup_camera)
+                .with_system(setup_entities),
+        )
         .add_system(move_cursor_to_mouse)
         .run();
 }
