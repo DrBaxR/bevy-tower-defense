@@ -9,6 +9,38 @@ pub struct Bullet {
     pub trajectory: Vec2,
 }
 
+#[derive(Bundle)]
+pub struct BulletBundle {
+    pub name: Name,
+    pub bullet: Bullet,
+    pub lifetime: Lifetime,
+    #[bundle]
+    pub sprite: SpriteBundle,
+}
+
+impl BulletBundle {
+    pub fn from_translation(translation: Vec3) -> Self {
+        BulletBundle {
+            name: Name::new("Bullet"),
+            bullet: Bullet {
+                trajectory: Vec2::new(50., 0.),
+            },
+            lifetime: Lifetime {
+                timer: Timer::new(Duration::from_millis(5000), TimerMode::Once),
+            },
+            sprite: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::RED,
+                    ..default()
+                },
+                transform: Transform::from_translation(translation)
+                    .with_scale(Vec3::new(10., 10., 1.)),
+                ..default()
+            },
+        }
+    }
+}
+
 fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &Bullet)>) {
     for (mut transform, bullet) in bullets.iter_mut() {
         transform.translation.x =
@@ -32,23 +64,8 @@ fn shoot_bullet(
         shooter.cooldown.tick(time.delta());
 
         if shooter.cooldown.finished() {
-            commands.spawn((
-                Name::new("Bullet"),
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::RED,
-                        ..default()
-                    },
-                    transform: Transform::from_translation(transform.translation.clone())
-                        .with_scale(Vec3::new(10., 10., 1.)),
-                    ..default()
-                },
-                Bullet {
-                    trajectory: Vec2::new(70., 0.),
-                },
-                Lifetime {
-                    timer: Timer::new(Duration::from_millis(5000), TimerMode::Once),
-                },
+            commands.spawn(BulletBundle::from_translation(
+                transform.translation.clone(),
             ));
         }
     }
