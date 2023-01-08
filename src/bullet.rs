@@ -54,6 +54,7 @@ fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &
 #[derive(Component)]
 pub struct Shooter {
     pub cooldown: Timer,
+    pub target: Vec3,
 }
 
 fn shoot_bullet(
@@ -65,7 +66,11 @@ fn shoot_bullet(
         shooter.cooldown.tick(time.delta());
 
         if shooter.cooldown.finished() {
-            commands.spawn(BulletBundle::new(transform.translation.clone(), &Vec3::new(10., 10., 0.), 50.));
+            commands.spawn(BulletBundle::new(
+                transform.translation.clone(),
+                &shooter.target,
+                100.,
+            ));
         }
     }
 }

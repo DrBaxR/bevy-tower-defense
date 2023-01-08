@@ -46,7 +46,8 @@ pub fn setup_entities(mut commands: Commands) {
             ..default()
         },
         Shooter {
-            cooldown: Timer::new(Duration::from_millis(1000), TimerMode::Repeating),
+            cooldown: Timer::new(Duration::from_millis(100), TimerMode::Repeating),
+            target: Vec3::new(10., 10., 0.),
         },
     ));
 }
