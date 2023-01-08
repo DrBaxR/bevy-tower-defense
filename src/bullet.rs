@@ -19,12 +19,13 @@ pub struct BulletBundle {
 }
 
 impl BulletBundle {
-    pub fn from_translation(translation: Vec3) -> Self {
+    pub fn new(position: Vec3, target: &Vec3, speed: f32) -> Self {
+        let trajectory =
+            Vec2::new(target.x - position.x, target.y - position.y).normalize() * speed;
+
         BulletBundle {
             name: Name::new("Bullet"),
-            bullet: Bullet {
-                trajectory: Vec2::new(50., 0.),
-            },
+            bullet: Bullet { trajectory },
             lifetime: Lifetime {
                 timer: Timer::new(Duration::from_millis(5000), TimerMode::Once),
             },
@@ -33,7 +34,7 @@ impl BulletBundle {
                     color: Color::RED,
                     ..default()
                 },
-                transform: Transform::from_translation(translation)
+                transform: Transform::from_translation(position)
                     .with_scale(Vec3::new(10., 10., 1.)),
                 ..default()
             },
@@ -64,9 +65,7 @@ fn shoot_bullet(
         shooter.cooldown.tick(time.delta());
 
         if shooter.cooldown.finished() {
-            commands.spawn(BulletBundle::from_translation(
-                transform.translation.clone(),
-            ));
+            commands.spawn(BulletBundle::new(transform.translation.clone(), &Vec3::new(10., 10., 0.), 50.));
         }
     }
 }
