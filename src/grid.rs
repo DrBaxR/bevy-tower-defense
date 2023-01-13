@@ -3,18 +3,21 @@ use bevy::prelude::*;
 const CELLS_GAP: f32 = 2.;
 
 #[derive(Component)]
+pub struct GridNode;
+
+#[derive(Clone)]
 pub struct Node {
     x: u32,
     y: u32,
     walkable: bool,
 }
 
-// TODO: this will probably be used as a resource
 pub struct Grid {
     width: u32,
     height: u32,
     cell_size: Vec2,
     offset: Vec2,
+    nodes: Vec<Vec<Node>>,
 }
 
 impl Grid {
@@ -27,12 +30,30 @@ impl Grid {
                 pixels_size.y / grid_height as f32,
             ),
             offset: position,
+            nodes: Grid::initialize_nodes(grid_width as usize, grid_height as usize),
         }
     }
 
-    pub fn setup(&self, commands: &mut Commands) {
+    fn initialize_nodes(x: usize, y: usize) -> Vec<Vec<Node>> {
+        let column = vec![
+            Node {
+                x: 0,
+                y: 0,
+                walkable: true
+            };
+            y as usize
+        ];
+        vec![column; x as usize]
+    }
+
+    pub fn setup(&mut self, commands: &mut Commands) {
         for x in 0..self.width {
             for y in 0..self.height {
+                let node = &mut self.nodes[x as usize][y as usize];
+                node.x = x;
+                node.y = y;
+                node.walkable = true;
+
                 commands.spawn((
                     Name::new("Node"),
                     SpriteBundle {
@@ -48,11 +69,7 @@ impl Grid {
                             )),
                         ..default()
                     },
-                    Node {
-                        x,
-                        y,
-                        walkable: !(x >= 2 && x <= 4 && y >= 1 && y <= 5),
-                    },
+                    GridNode,
                 ));
             }
         }
@@ -68,18 +85,14 @@ impl Grid {
 }
 
 fn spawn_grid(mut commands: Commands) {
-    let grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
+    let mut grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
 
     grid.setup(&mut commands);
 }
 
-fn color_grid_nodes(mut nodes: Query<(&mut Sprite, &Node)>) {
-    for (mut sprite, node) in nodes.iter_mut() {
-        if node.walkable {
-            sprite.color = Color::WHITE;
-        } else {
-            sprite.color = Color::RED;
-        }
+fn color_grid_nodes(mut nodes: Query<&mut Sprite, With<GridNode>>) {
+    for mut sprite in nodes.iter_mut() {
+        sprite.color = Color::WHITE;
     }
 }
 
@@ -87,6 +100,7 @@ pub struct GridPlugin;
 
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
+        // TODO: make grid be a resource
         app.add_startup_system(spawn_grid)
             .add_system(color_grid_nodes);
     }
