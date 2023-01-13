@@ -4,10 +4,12 @@ use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 
 use bullet::*;
 use cursor::*;
+use grid::Grid;
 
 pub mod bullet;
 pub mod cursor;
 pub mod lifetime;
+pub mod grid;
 
 pub fn setup_camera(mut commands: Commands) {
     commands.spawn((
@@ -22,6 +24,9 @@ pub fn setup_camera(mut commands: Commands) {
 }
 
 pub fn setup_entities(mut commands: Commands) {
+    let grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
+    grid.setup(&mut commands);
+
     commands.spawn((
         Name::new("Cursor"),
         SpriteBundle {
@@ -35,19 +40,20 @@ pub fn setup_entities(mut commands: Commands) {
         Cursor,
     ));
 
-    commands.spawn((
-        Name::new("Tower"),
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::WHITE,
-                ..default()
-            },
-            transform: Transform::from_xyz(0., 0., 1.).with_scale(Vec3::new(30., 30., 1.)),
-            ..default()
-        },
-        Shooter {
-            cooldown: Timer::new(Duration::from_millis(100), TimerMode::Repeating),
-            target: Vec3::new(10., 10., 0.),
-        },
-    ));
+    // TODO: uncomment when done with grid testing
+    // commands.spawn((
+    //     Name::new("Tower"),
+    //     SpriteBundle {
+    //         sprite: Sprite {
+    //             color: Color::WHITE,
+    //             ..default()
+    //         },
+    //         transform: Transform::from_xyz(0., 0., 1.).with_scale(Vec3::new(30., 30., 1.)),
+    //         ..default()
+    //     },
+    //     Shooter {
+    //         cooldown: Timer::new(Duration::from_millis(50000), TimerMode::Repeating),
+    //         target: Vec3::ZERO,
+    //     },
+    // ));
 }

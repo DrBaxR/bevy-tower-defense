@@ -69,7 +69,7 @@ fn shoot_bullet(
             commands.spawn(BulletBundle::new(
                 transform.translation.clone(),
                 &shooter.target,
-                100.,
+                50.,
             ));
         }
     }
