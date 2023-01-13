@@ -24,9 +24,6 @@ pub fn setup_camera(mut commands: Commands) {
 }
 
 pub fn setup_entities(mut commands: Commands) {
-    let grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
-    grid.setup(&mut commands);
-
     commands.spawn((
         Name::new("Cursor"),
         SpriteBundle {
