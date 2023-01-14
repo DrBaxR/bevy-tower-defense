@@ -1,9 +1,13 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy::prelude::*;
+
+use crate::cursor::Cursor;
 
 const CELLS_GAP: f32 = 2.;
 
 #[derive(Component)]
-pub struct DebugGridNode;
+pub struct DebugGridNode {
+    color: Color,
+}
 
 #[derive(Clone)]
 pub struct Node {
@@ -35,6 +39,29 @@ impl Grid {
         }
     }
 
+    pub fn get_grid_coords(&self, world_pos: &Vec3) -> (u32, u32) {
+        (
+            (((self.clamp_width(world_pos.x) - self.offset.x) / self.width as f32) as u32)
+                .clamp(0, self.width - 1),
+            ((-(self.clamp_height(world_pos.y) - self.offset.y) / self.height as f32) as u32)
+                .clamp(0, self.height - 1),
+        )
+    }
+
+    fn clamp_width(&self, x: f32) -> f32 {
+        x.clamp(
+            self.offset.x,
+            self.offset.x + self.width as f32 * self.cell_size.x,
+        )
+    }
+
+    fn clamp_height(&self, y: f32) -> f32 {
+        y.clamp(
+            self.offset.y - self.height as f32 * self.cell_size.y,
+            self.offset.y,
+        )
+    }
+
     fn initialize_nodes(x: usize, y: usize) -> Vec<Vec<Node>> {
         let column = vec![
             Node {
@@ -47,7 +74,7 @@ impl Grid {
         vec![column; x as usize]
     }
 
-    pub fn setup(&mut self, commands: &mut Commands) -> Vec<Entity> {
+    fn setup(&mut self, commands: &mut Commands) -> Vec<Entity> {
         let mut entities: Vec<Entity> = vec![];
 
         for x in 0..self.width {
@@ -76,7 +103,7 @@ impl Grid {
                                 )),
                                 ..default()
                             },
-                            DebugGridNode,
+                            DebugGridNode { color: Color::WHITE },
                         ))
                         .id(),
                 );
@@ -112,9 +139,28 @@ fn spawn_debug_grid(mut commands: Commands) {
         .push_children(&node_entities[..]);
 }
 
-fn color_grid_nodes(mut nodes: Query<&mut Sprite, With<DebugGridNode>>) {
-    for mut sprite in nodes.iter_mut() {
-        sprite.color = Color::WHITE;
+fn color_grid_nodes(mut nodes: Query<(&mut Sprite, &DebugGridNode)>) {
+    for (mut sprite, node) in nodes.iter_mut() {
+        sprite.color = node.color;
+    }
+}
+
+fn color_cursor(
+    cursors: Query<&Transform, With<Cursor>>,
+    grids: Query<&Grid>,
+    mut nodes: Query<(&mut DebugGridNode, &Transform)>,
+) {
+    let grid = grids.single();
+    let cursor_transform = cursors.single();
+
+    let grid_coord = grid.get_grid_coords(&cursor_transform.translation);
+    for (mut node, transform) in nodes.iter_mut() {
+        let sprite_coords = grid.get_grid_coords(&transform.translation);
+        if sprite_coords.0 == grid_coord.0 && sprite_coords.1 == grid_coord.1 {
+            node.color = Color::CYAN;
+        } else {
+            node.color = Color::WHITE;
+        }
     }
 }
 
@@ -126,7 +172,8 @@ impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         if self.debug {
             app.add_startup_system(spawn_debug_grid)
-                .add_system(color_grid_nodes);
+                .add_system(color_cursor)
+                .add_system(color_grid_nodes.after(color_cursor));
         }
     }
 }

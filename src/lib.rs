@@ -31,7 +31,7 @@ pub fn setup_entities(mut commands: Commands) {
                 color: Color::WHITE,
                 ..default()
             },
-            transform: Transform::from_scale(Vec3::new(10., 10., 1.)),
+            transform: Transform::from_scale(Vec3::new(0., 0., 1.)),
             ..default()
         },
         Cursor,
