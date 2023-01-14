@@ -1,9 +1,9 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 
 const CELLS_GAP: f32 = 2.;
 
 #[derive(Component)]
-pub struct GridNode;
+pub struct DebugGridNode;
 
 #[derive(Clone)]
 pub struct Node {
@@ -12,6 +12,7 @@ pub struct Node {
     walkable: bool,
 }
 
+#[derive(Component)]
 pub struct Grid {
     width: u32,
     height: u32,
@@ -46,7 +47,9 @@ impl Grid {
         vec![column; x as usize]
     }
 
-    pub fn setup(&mut self, commands: &mut Commands) {
+    pub fn setup(&mut self, commands: &mut Commands) -> Vec<Entity> {
+        let mut entities: Vec<Entity> = vec![];
+
         for x in 0..self.width {
             for y in 0..self.height {
                 let node = &mut self.nodes[x as usize][y as usize];
@@ -54,25 +57,33 @@ impl Grid {
                 node.y = y;
                 node.walkable = true;
 
-                commands.spawn((
-                    Name::new("Node"),
-                    SpriteBundle {
-                        sprite: Sprite {
-                            color: Color::WHITE,
-                            ..default()
-                        },
-                        transform: Transform::from_translation(self.cell_center_coords(x, y))
-                            .with_scale(Vec3::new(
-                                self.cell_size.x - CELLS_GAP,
-                                self.cell_size.y - CELLS_GAP,
-                                1.,
-                            )),
-                        ..default()
-                    },
-                    GridNode,
-                ));
+                entities.push(
+                    commands
+                        .spawn((
+                            Name::new("Node"),
+                            SpriteBundle {
+                                sprite: Sprite {
+                                    color: Color::WHITE,
+                                    ..default()
+                                },
+                                transform: Transform::from_translation(
+                                    self.cell_center_coords(x, y),
+                                )
+                                .with_scale(Vec3::new(
+                                    self.cell_size.x - CELLS_GAP,
+                                    self.cell_size.y - CELLS_GAP,
+                                    1.,
+                                )),
+                                ..default()
+                            },
+                            DebugGridNode,
+                        ))
+                        .id(),
+                );
             }
         }
+
+        return entities;
     }
 
     fn cell_center_coords(&self, x: u32, y: u32) -> Vec3 {
@@ -84,24 +95,38 @@ impl Grid {
     }
 }
 
-fn spawn_grid(mut commands: Commands) {
+fn spawn_debug_grid(mut commands: Commands) {
     let mut grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
+    let node_entities = grid.setup(&mut commands);
 
-    grid.setup(&mut commands);
+    let grid_entity = commands
+        .spawn((
+            Name::new("Grid"),
+            VisibilityBundle::default(),
+            TransformBundle::default(),
+            grid,
+        ))
+        .id();
+    commands
+        .entity(grid_entity)
+        .push_children(&node_entities[..]);
 }
 
-fn color_grid_nodes(mut nodes: Query<&mut Sprite, With<GridNode>>) {
+fn color_grid_nodes(mut nodes: Query<&mut Sprite, With<DebugGridNode>>) {
     for mut sprite in nodes.iter_mut() {
         sprite.color = Color::WHITE;
     }
 }
 
-pub struct GridPlugin;
+pub struct GridPlugin {
+    pub debug: bool,
+}
 
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
-        // TODO: make grid be a resource
-        app.add_startup_system(spawn_grid)
-            .add_system(color_grid_nodes);
+        if self.debug {
+            app.add_startup_system(spawn_debug_grid)
+                .add_system(color_grid_nodes);
+        }
     }
 }
