@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::cursor::Cursor;
 
-use super::Grid;
+use super::{Grid, pathfinding::Pathfinder, GridNode};
 
 const CELLS_GAP: f32 = 2.;
 
@@ -56,12 +56,17 @@ fn spawn_debug_grid(mut commands: Commands) {
     let mut grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
     let node_entities = grid.setup(&mut commands);
 
+    let pathfinder = Pathfinder {
+        grid,
+        path: Vec::new()
+    };
+
     let grid_entity = commands
         .spawn((
             Name::new("Grid"),
             VisibilityBundle::default(),
             TransformBundle::default(),
-            grid,
+            pathfinder
         ))
         .id();
     commands
@@ -75,21 +80,28 @@ fn color_grid_nodes(mut nodes: Query<(&mut Sprite, &DebugGridNode)>) {
     }
 }
 
-fn color_cursor(
-    cursors: Query<&Transform, With<Cursor>>,
-    grids: Query<&Grid>,
-    mut nodes: Query<(&mut DebugGridNode, &Transform)>,
+fn color_path(
+    mut pathfinders: Query<&mut Pathfinder>,
+    mut grid_nodes: Query<(&Transform, &mut DebugGridNode)>,
+    cursors: Query<&Transform, With<Cursor>>
 ) {
-    let grid = grids.single();
-    let cursor_transform = cursors.single();
+    let cursor = cursors.single();
 
-    let grid_coord = grid.get_grid_coords(&cursor_transform.translation);
-    for (mut node, transform) in nodes.iter_mut() {
-        let sprite_coords = grid.get_grid_coords(&transform.translation);
-        if sprite_coords.0 == grid_coord.0 && sprite_coords.1 == grid_coord.1 {
-            node.color = Color::CYAN;
-        } else {
-            node.color = Color::WHITE;
+    for (_, mut node) in grid_nodes.iter_mut() {
+        node.color = Color::WHITE;
+    }
+
+    for mut pathfinder in pathfinders.iter_mut() {
+        // ! find_path DOES NOT find the optimal path
+        pathfinder.find_path(&cursor.translation, &Vec3::new(1., 1., 1.));
+
+        for (node_transform, mut node) in grid_nodes.iter_mut() {
+            for path_node in pathfinder.path.iter() {
+                let current_node = pathfinder.grid.get_node(&node_transform.translation);
+                if current_node == path_node {
+                    node.color = Color::RED;
+                }
+            }
         }
     }
 }
@@ -102,8 +114,8 @@ impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         if self.debug {
             app.add_startup_system(spawn_debug_grid)
-                .add_system(color_cursor)
-                .add_system(color_grid_nodes.after(color_cursor));
+                .add_system(color_path)
+                .add_system(color_grid_nodes.after(color_path));
         }
     }
 }

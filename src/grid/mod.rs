@@ -1,13 +1,51 @@
+use std::fmt::Debug;
+
 use bevy::prelude::*;
 
+mod pathfinding;
 pub mod plugin;
 
 #[derive(Clone)]
-pub struct Node {
+pub struct GridNode {
     x: u32,
     y: u32,
     walkable: bool,
+    f_cost: u32,
+    g_cost: u32,
+    h_cost: u32,
+    parent: Option<(u32, u32)>, // grid coords of parent
 }
+
+impl Default for GridNode {
+    fn default() -> Self {
+        Self {
+            x: 0,
+            y: 0,
+            walkable: true,
+            f_cost: 0,
+            g_cost: 0,
+            h_cost: 0,
+            parent: None,
+        }
+    }
+}
+
+impl Debug for GridNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GridNode")
+            .field("x", &self.x)
+            .field("y", &self.y)
+            .finish()
+    }
+}
+
+impl PartialEq for GridNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
+impl Eq for GridNode {}
 
 #[derive(Component)]
 pub struct Grid {
@@ -15,7 +53,7 @@ pub struct Grid {
     height: u32,
     cell_size: Vec2,
     offset: Vec2,
-    nodes: Vec<Vec<Node>>,
+    nodes: Vec<Vec<GridNode>>,
 }
 
 impl Grid {
@@ -32,6 +70,12 @@ impl Grid {
         }
     }
 
+    pub fn get_node<'a>(&'a self, world_pos: &Vec3) -> &'a GridNode {
+        let coords = self.get_grid_coords(world_pos);
+
+        &self.nodes[coords.0 as usize][coords.1 as usize]
+    }
+
     pub fn get_grid_coords(&self, world_pos: &Vec3) -> (u32, u32) {
         (
             (((self.clamp_width(world_pos.x) - self.offset.x) / self.width as f32) as u32)
@@ -39,6 +83,43 @@ impl Grid {
             ((-(self.clamp_height(world_pos.y) - self.offset.y) / self.height as f32) as u32)
                 .clamp(0, self.height - 1),
         )
+    }
+
+    pub fn get_neighbours<'a>(&'a self, node: &GridNode) -> Vec<&'a GridNode> {
+        let mut neighbours = Vec::new();
+
+        for x in -1..2 {
+            for y in -1..2 {
+                let new_x = node.x as i32 + x;
+                let new_y = node.y as i32 + y;
+
+                if self.in_bounds_width(new_x) && self.in_bounds_height(new_y) {
+                    let neighbour = &self.nodes[new_x as usize][new_y as usize];
+
+                    if neighbour.walkable {
+                        neighbours.push(neighbour);
+                    }
+                }
+            }
+        }
+
+        neighbours
+    }
+
+    pub fn set_node_parent(&mut self, node: &GridNode, parent_value: Option<(u32, u32)>) {
+        self.nodes[node.x as usize][node.y as usize].parent = parent_value;
+    }
+
+    pub fn get_grid_node_mut<'a>(&'a mut self, node: &GridNode) -> &'a mut GridNode {
+        &mut self.nodes[node.x as usize][node.y as usize]
+    }
+
+    fn in_bounds_width(&self, x: i32) -> bool {
+        x >= 0 && x < self.width as i32
+    }
+
+    fn in_bounds_height(&self, y: i32) -> bool {
+        y >= 0 && y < self.height as i32
     }
 
     fn clamp_width(&self, x: f32) -> f32 {
@@ -55,18 +136,10 @@ impl Grid {
         )
     }
 
-    fn initialize_nodes(x: usize, y: usize) -> Vec<Vec<Node>> {
-        let column = vec![
-            Node {
-                x: 0,
-                y: 0,
-                walkable: true
-            };
-            y as usize
-        ];
+    fn initialize_nodes(x: usize, y: usize) -> Vec<Vec<GridNode>> {
+        let column = vec![GridNode::default(); y as usize];
         vec![column; x as usize]
     }
-
 
     fn cell_center_coords(&self, x: u32, y: u32) -> Vec3 {
         Vec3::new(
