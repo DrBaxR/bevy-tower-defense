@@ -47,6 +47,19 @@ impl PartialEq for GridNode {
 
 impl Eq for GridNode {}
 
+impl GridNode {
+    fn get_distance(&self, other: &GridNode) -> u32 {
+        let x_dist = (self.x as i32 - other.x as i32).abs();
+        let y_dist = (self.y as i32 - other.y as i32).abs();
+
+        if x_dist > y_dist {
+            return (14 * x_dist + 10 * (x_dist - y_dist)).try_into().unwrap();
+        }
+
+        return (14 * y_dist + 10 * (y_dist - x_dist)).try_into().unwrap();
+    }
+}
+
 #[derive(Component)]
 pub struct Grid {
     width: u32,
@@ -54,6 +67,7 @@ pub struct Grid {
     cell_size: Vec2,
     offset: Vec2,
     nodes: Vec<Vec<GridNode>>,
+    path: Vec<GridNode>,
 }
 
 impl Grid {
@@ -67,6 +81,7 @@ impl Grid {
             ),
             offset: position,
             nodes: Grid::initialize_nodes(grid_width as usize, grid_height as usize),
+            path: Vec::new(),
         }
     }
 
@@ -74,6 +89,10 @@ impl Grid {
         let coords = self.get_grid_coords(world_pos);
 
         &self.nodes[coords.0 as usize][coords.1 as usize]
+    }
+
+    pub fn get_node_mut<'a>(&'a mut self, node: &GridNode) -> &'a mut GridNode {
+        &mut self.nodes[node.x as usize][node.y as usize]
     }
 
     pub fn get_grid_coords(&self, world_pos: &Vec3) -> (u32, u32) {
@@ -85,7 +104,7 @@ impl Grid {
         )
     }
 
-    pub fn get_neighbours<'a>(&'a self, node: &GridNode) -> Vec<&'a GridNode> {
+    pub fn get_neighbours(&self, node: &GridNode) -> Vec<GridNode> {
         let mut neighbours = Vec::new();
 
         for x in -1..2 {
@@ -96,9 +115,7 @@ impl Grid {
                 if self.in_bounds_width(new_x) && self.in_bounds_height(new_y) {
                     let neighbour = &self.nodes[new_x as usize][new_y as usize];
 
-                    if neighbour.walkable {
-                        neighbours.push(neighbour);
-                    }
+                    neighbours.push(neighbour.clone());
                 }
             }
         }
@@ -106,12 +123,20 @@ impl Grid {
         neighbours
     }
 
-    pub fn set_node_parent(&mut self, node: &GridNode, parent_value: Option<(u32, u32)>) {
-        self.nodes[node.x as usize][node.y as usize].parent = parent_value;
+    pub fn reset_nodes(&mut self) {
+        for i in 0..self.width {
+            for j in 0..self.height {
+                let node = &mut self.nodes[i as usize][j as usize];
+                node.f_cost = 0;
+                node.h_cost = 0;
+                node.g_cost = 0;
+                node.parent = None;
+            }
+        }
     }
 
-    pub fn get_grid_node_mut<'a>(&'a mut self, node: &GridNode) -> &'a mut GridNode {
-        &mut self.nodes[node.x as usize][node.y as usize]
+    pub fn set_node_parent(&mut self, node: &GridNode, parent_value: Option<(u32, u32)>) {
+        self.nodes[node.x as usize][node.y as usize].parent = parent_value;
     }
 
     fn in_bounds_width(&self, x: i32) -> bool {
@@ -147,5 +172,18 @@ impl Grid {
             -(y as f32 * self.cell_size.y + self.cell_size.y / 2.) + self.offset.y,
             1.,
         )
+    }
+
+    fn retrace_path(&self, target: &GridNode) -> Vec<GridNode> {
+        let mut current = target.clone();
+        let mut path = vec![];
+
+        while let Some((parent_x, parent_y)) = current.parent {
+            path.push(current.clone());
+            current = self.nodes[parent_x as usize][parent_y as usize].clone();
+        }
+
+        path.push(current);
+        path
     }
 }

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::cursor::Cursor;
 
-use super::{Grid, pathfinding::Pathfinder, GridNode};
+use super::{Grid, pathfinding::GridPathfinder};
 
 const CELLS_GAP: f32 = 2.;
 
@@ -56,17 +56,12 @@ fn spawn_debug_grid(mut commands: Commands) {
     let mut grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
     let node_entities = grid.setup(&mut commands);
 
-    let pathfinder = Pathfinder {
-        grid,
-        path: Vec::new()
-    };
-
     let grid_entity = commands
         .spawn((
             Name::new("Grid"),
             VisibilityBundle::default(),
             TransformBundle::default(),
-            pathfinder
+            grid
         ))
         .id();
     commands
@@ -81,7 +76,7 @@ fn color_grid_nodes(mut nodes: Query<(&mut Sprite, &DebugGridNode)>) {
 }
 
 fn color_path(
-    mut pathfinders: Query<&mut Pathfinder>,
+    mut pathfinders: Query<&mut Grid>,
     mut grid_nodes: Query<(&Transform, &mut DebugGridNode)>,
     cursors: Query<&Transform, With<Cursor>>
 ) {
@@ -92,12 +87,11 @@ fn color_path(
     }
 
     for mut pathfinder in pathfinders.iter_mut() {
-        // ! find_path DOES NOT find the optimal path
         pathfinder.find_path(&cursor.translation, &Vec3::new(1., 1., 1.));
 
         for (node_transform, mut node) in grid_nodes.iter_mut() {
             for path_node in pathfinder.path.iter() {
-                let current_node = pathfinder.grid.get_node(&node_transform.translation);
+                let current_node = pathfinder.get_node(&node_transform.translation);
                 if current_node == path_node {
                     node.color = Color::RED;
                 }
