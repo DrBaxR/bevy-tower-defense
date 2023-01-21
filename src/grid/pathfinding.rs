@@ -30,6 +30,8 @@ impl GridPathfinder for Grid {
         let mut closed_set: Vec<GridNode> = Vec::new();
 
         loop {
+            update_to_grid(&mut open_set, self);
+
             let min_cost = get_least_f_cost(&open_set);
             if let Some((min_index, current_node)) = min_cost {
                 open_set.remove(min_index);
@@ -70,4 +72,13 @@ impl GridPathfinder for Grid {
             }
         }
     }
+}
+
+fn update_to_grid(nodes: &mut Vec<GridNode>, grid: &Grid) {
+    nodes.iter_mut().for_each(|node| {
+        let grid_node = &grid.nodes[node.x as usize][node.y as usize];
+        node.f_cost = grid_node.f_cost;
+        node.g_cost = grid_node.g_cost;
+        node.h_cost = grid_node.h_cost;
+    })
 }

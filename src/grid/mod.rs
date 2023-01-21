@@ -5,6 +5,8 @@ use bevy::prelude::*;
 mod pathfinding;
 pub mod plugin;
 
+const INFINITY: u32 = 9999999;
+
 #[derive(Clone)]
 pub struct GridNode {
     x: u32,
@@ -22,8 +24,8 @@ impl Default for GridNode {
             x: 0,
             y: 0,
             walkable: true,
-            f_cost: 0,
-            g_cost: 0,
+            f_cost: INFINITY,
+            g_cost: INFINITY,
             h_cost: 0,
             parent: None,
         }
@@ -52,12 +54,18 @@ impl GridNode {
         let x_dist = (self.x as i32 - other.x as i32).abs();
         let y_dist = (self.y as i32 - other.y as i32).abs();
 
-        if x_dist > y_dist {
-            return (14 * x_dist + 10 * (x_dist - y_dist)).try_into().unwrap();
+        if x_dist >= y_dist {
+            return (14 * y_dist + 10 * (x_dist - y_dist)) as u32;
         }
 
-        return (14 * y_dist + 10 * (y_dist - x_dist)).try_into().unwrap();
+        return (14 * x_dist + 10 * (y_dist - x_dist)) as u32;
     }
+    //     fn get_distance(&self, other: &GridNode) -> u32 {
+    //         let x_dist = (self.x as i32 - other.x as i32).abs();
+    //         let y_dist = (self.y as i32 - other.y as i32).abs();
+
+    //         return (x_dist * 10 + y_dist * 10) as u32;
+    //     }
 }
 
 #[derive(Component)]
@@ -109,6 +117,10 @@ impl Grid {
 
         for x in -1..2 {
             for y in -1..2 {
+                if x == 0 && y == 0 {
+                    continue;
+                }
+
                 let new_x = node.x as i32 + x;
                 let new_y = node.y as i32 + y;
 
@@ -127,9 +139,9 @@ impl Grid {
         for i in 0..self.width {
             for j in 0..self.height {
                 let node = &mut self.nodes[i as usize][j as usize];
-                node.f_cost = 0;
+                node.f_cost = INFINITY;
                 node.h_cost = 0;
-                node.g_cost = 0;
+                node.g_cost = INFINITY;
                 node.parent = None;
             }
         }

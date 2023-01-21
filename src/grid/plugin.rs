@@ -53,6 +53,7 @@ impl Grid {
 }
 
 fn spawn_debug_grid(mut commands: Commands) {
+    // TODO: investogate what happens when grid is bigger / not square
     let mut grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
     let node_entities = grid.setup(&mut commands);
 
