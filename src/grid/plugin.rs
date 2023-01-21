@@ -22,6 +22,10 @@ impl Grid {
                 node.y = y;
                 node.walkable = true;
 
+                if x > 4 && x <= 7 && y > 10 && y <= 12 || x > 3 && x <= 5 && y > 1 && y <= 11 {
+                    node.walkable = false;
+                }
+
                 entities.push(
                     commands
                         .spawn((
@@ -95,6 +99,10 @@ fn color_path(
                 let current_node = pathfinder.get_node(&node_transform.translation);
                 if current_node == path_node {
                     node.color = Color::RED;
+                }
+
+                if !current_node.walkable {
+                    node.color = Color::BLUE;
                 }
             }
         }
