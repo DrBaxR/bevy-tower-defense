@@ -60,12 +60,6 @@ impl GridNode {
 
         return (14 * x_dist + 10 * (y_dist - x_dist)) as u32;
     }
-    //     fn get_distance(&self, other: &GridNode) -> u32 {
-    //         let x_dist = (self.x as i32 - other.x as i32).abs();
-    //         let y_dist = (self.y as i32 - other.y as i32).abs();
-
-    //         return (x_dist * 10 + y_dist * 10) as u32;
-    //     }
 }
 
 #[derive(Component)]
@@ -105,9 +99,9 @@ impl Grid {
 
     pub fn get_grid_coords(&self, world_pos: &Vec3) -> (u32, u32) {
         (
-            (((self.clamp_width(world_pos.x) - self.offset.x) / self.width as f32) as u32)
+            (((self.clamp_width(world_pos.x) - self.offset.x) / self.cell_size.x as f32) as u32)
                 .clamp(0, self.width - 1),
-            ((-(self.clamp_height(world_pos.y) - self.offset.y) / self.height as f32) as u32)
+            ((-(self.clamp_height(world_pos.y) - self.offset.y) / self.cell_size.y as f32) as u32)
                 .clamp(0, self.height - 1),
         )
     }
@@ -161,15 +155,15 @@ impl Grid {
 
     fn clamp_width(&self, x: f32) -> f32 {
         x.clamp(
-            self.offset.x,
-            self.offset.x + self.width as f32 * self.cell_size.x,
+            -(self.width as f32 * self.cell_size.x / 2.),
+            self.width as f32 * self.cell_size.x / 2.,
         )
     }
 
     fn clamp_height(&self, y: f32) -> f32 {
         y.clamp(
-            self.offset.y - self.height as f32 * self.cell_size.y,
-            self.offset.y,
+            -(self.height as f32 * self.cell_size.y / 2.),
+            self.height as f32 * self.cell_size.y / 2.,
         )
     }
 

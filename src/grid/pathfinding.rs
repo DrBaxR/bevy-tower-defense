@@ -31,8 +31,8 @@ impl GridPathfinder for Grid {
 
         loop {
             update_to_grid(&mut open_set, self);
-
             let min_cost = get_least_f_cost(&open_set);
+
             if let Some((min_index, current_node)) = min_cost {
                 open_set.remove(min_index);
                 closed_set.push(current_node.clone());
@@ -61,8 +61,8 @@ impl GridPathfinder for Grid {
                         n.f_cost = neighbour.g_cost + neighbour.h_cost;
                         n.parent = Some((current_node.x, current_node.y));
 
-                        if !open_set.iter().any(|node| *node == *neighbour) {
-                            open_set.push((*neighbour).clone());
+                        if !open_set.iter().any(|node| *node == *n) {
+                            open_set.push((*n).clone());
                         }
                     }
                 }
