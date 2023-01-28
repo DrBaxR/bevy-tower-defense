@@ -100,8 +100,6 @@ impl Grid {
                     f_score: INFINITY,
                     g_score: INFINITY,
                     parent: None,
-                    // walkable: !(x == 1 && y == 1),
-                    // walkable: !(x == 1 && y == 1 || x == 1 && y == 0),
                     // TODO: make a constructor that takes a matrix as input and creates the grid based on it
                     walkable: true,
                 })));

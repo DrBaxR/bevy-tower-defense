@@ -1,123 +1,75 @@
-use bevy::prelude::*;
+use bevy::{ecs::bundle, prelude::*};
 
-use crate::cursor::Cursor;
-
-use super::{Grid, pathfinding::GridPathfinder};
-
-const CELLS_GAP: f32 = 2.;
-
-#[derive(Component)]
-pub struct DebugGridNode {
-    color: Color,
+#[derive(Bundle)]
+struct SquareBundle {
+    #[bundle]
+    sprite: SpriteBundle,
+    name: Name,
 }
 
-impl Grid {
-    fn setup(&mut self, commands: &mut Commands) -> Vec<Entity> {
-        let mut entities: Vec<Entity> = vec![];
-
-        for x in 0..self.width {
-            for y in 0..self.height {
-                let node = &mut self.nodes[x as usize][y as usize];
-                node.x = x;
-                node.y = y;
-                node.walkable = true;
-
-                if x > 4 && x <= 7 && y > 10 && y <= 12 || x > 3 && x <= 5 && y > 1 && y <= 11 {
-                    node.walkable = false;
-                }
-
-                entities.push(
-                    commands
-                        .spawn((
-                            Name::new("Node"),
-                            SpriteBundle {
-                                sprite: Sprite {
-                                    color: Color::WHITE,
-                                    ..default()
-                                },
-                                transform: Transform::from_translation(
-                                    self.cell_center_coords(x, y),
-                                )
-                                .with_scale(Vec3::new(
-                                    self.cell_size.x - CELLS_GAP,
-                                    self.cell_size.y - CELLS_GAP,
-                                    1.,
-                                )),
-                                ..default()
-                            },
-                            DebugGridNode { color: Color::WHITE },
-                        ))
-                        .id(),
-                );
-            }
-        }
-
-        return entities;
-    }
-}
-
-fn spawn_debug_grid(mut commands: Commands) {
-    let mut grid = Grid::new(20, 20, Vec2::new(400., 400.), Vec2::new(-200., 200.));
-    let node_entities = grid.setup(&mut commands);
-
-    let grid_entity = commands
-        .spawn((
-            Name::new("Grid"),
-            VisibilityBundle::default(),
-            TransformBundle::default(),
-            grid
-        ))
-        .id();
-    commands
-        .entity(grid_entity)
-        .push_children(&node_entities[..]);
-}
-
-fn color_grid_nodes(mut nodes: Query<(&mut Sprite, &DebugGridNode)>) {
-    for (mut sprite, node) in nodes.iter_mut() {
-        sprite.color = node.color;
-    }
-}
-
-fn color_path(
-    mut pathfinders: Query<&mut Grid>,
-    mut grid_nodes: Query<(&Transform, &mut DebugGridNode)>,
-    cursors: Query<&Transform, With<Cursor>>
-) {
-    let cursor = cursors.single();
-
-    for (_, mut node) in grid_nodes.iter_mut() {
-        node.color = Color::WHITE;
-    }
-
-    for mut pathfinder in pathfinders.iter_mut() {
-        pathfinder.find_path(&cursor.translation, &Vec3::new(1., 1., 1.));
-
-        for (node_transform, mut node) in grid_nodes.iter_mut() {
-            for path_node in pathfinder.path.iter() {
-                let current_node = pathfinder.get_node(&node_transform.translation);
-                if current_node == path_node {
-                    node.color = Color::RED;
-                }
-
-                if !current_node.walkable {
-                    node.color = Color::BLUE;
-                }
-            }
+impl SquareBundle {
+    fn new(position: &Vec2, size: f32) -> Self {
+        SquareBundle {
+            sprite: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::WHITE,
+                    ..default()
+                },
+                transform: Transform::from_translation(Vec3::new(position.x, position.y, 0.))
+                    .with_scale(Vec3::new(size, size, 1.)),
+                ..default()
+            },
+            name: Name::new("Square"),
         }
     }
 }
 
-pub struct GridPlugin {
-    pub debug: bool,
+struct DebugGrid {
+    pub position: Vec2,
+    pub cell_size: f32,
+    pub size_x: usize,
+    pub size_y: usize,
+    cells_offset: Vec2,
 }
+
+impl DebugGrid {
+    fn new(position: Vec2, cell_size: f32, size_x: usize, size_y: usize) -> Self {
+        Self {
+            position,
+            cell_size,
+            size_x,
+            size_y,
+            cells_offset: position
+                - Vec2::new(
+                    cell_size * size_x as f32 / 2.,
+                    cell_size * size_y as f32 / 2.,
+                ),
+        }
+    }
+
+    fn to_screen_coords(&self, x: usize, y: usize) -> Vec2 {
+        Vec2::new(
+            (x * self.size_x) as f32 - self.cell_size / 2.,
+            (y * self.size_y) as f32 - self.cell_size / 2.,
+        ) + self.cells_offset
+    }
+}
+
+fn spawn_grid(mut commands: Commands) {
+    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 20, 20);
+    const CELL_GAP: f32 = 2.;
+
+    for i in 0..grid.size_x {
+        for j in 0..grid.size_y {
+            commands.spawn(SquareBundle::new(&grid.to_screen_coords(i, j), grid.cell_size - CELL_GAP));
+        }
+    }
+}
+
+pub struct GridPlugin;
 
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
-        if self.debug {
-            app.add_startup_system(spawn_debug_grid)
-                .add_system(color_path)
-                .add_system(color_grid_nodes.after(color_path));
-        }
+        app.add_startup_system(spawn_grid);
     }
 }
