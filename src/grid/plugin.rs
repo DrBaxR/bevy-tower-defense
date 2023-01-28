@@ -32,6 +32,13 @@ struct DebugGrid {
     cells_offset: Vec2,
 }
 
+#[derive(Component)]
+struct DebugNode {
+    color: Color,
+    x: usize,
+    y: usize,
+}
+
 impl DebugGrid {
     fn new(position: Vec2, cell_size: f32, size_x: usize, size_y: usize) -> Self {
         Self {
@@ -61,8 +68,21 @@ fn spawn_grid(mut commands: Commands) {
 
     for i in 0..grid.size_x {
         for j in 0..grid.size_y {
-            commands.spawn(SquareBundle::new(&grid.to_screen_coords(i, j), grid.cell_size - CELL_GAP));
+            commands.spawn((
+                SquareBundle::new(&grid.to_screen_coords(i, j), grid.cell_size - CELL_GAP),
+                DebugNode {
+                    color: Color::WHITE,
+                    x: i,
+                    y: j,
+                },
+            ));
         }
+    }
+}
+
+fn color_nodes(mut nodes: Query<(&mut Sprite, &DebugNode)>) {
+    for (mut sprite, node) in nodes.iter_mut() {
+        sprite.color = node.color;
     }
 }
 
@@ -70,6 +90,6 @@ pub struct GridPlugin;
 
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_grid);
+        app.add_startup_system(spawn_grid).add_system(color_nodes);
     }
 }
