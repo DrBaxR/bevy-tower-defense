@@ -56,14 +56,14 @@ impl DebugGrid {
 
     fn to_screen_coords(&self, x: usize, y: usize) -> Vec2 {
         Vec2::new(
-            (x * self.size_x) as f32 - self.cell_size / 2.,
-            (y * self.size_y) as f32 - self.cell_size / 2.,
+            x as f32 * self.cell_size - self.cell_size / 2.,
+            y as f32 * self.cell_size - self.cell_size / 2.,
         ) + self.cells_offset
     }
 }
 
 fn spawn_grid(mut commands: Commands) {
-    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 20, 20);
+    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 30, 20);
     const CELL_GAP: f32 = 2.;
 
     for i in 0..grid.size_x {
