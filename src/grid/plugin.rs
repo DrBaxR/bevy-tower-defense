@@ -2,6 +2,9 @@ use bevy::{ecs::bundle, prelude::*};
 
 use crate::cursor::Cursor;
 
+use super::a_star::Grid;
+
+
 #[derive(Bundle)]
 struct SquareBundle {
     #[bundle]
@@ -116,14 +119,25 @@ fn find_path(
     mut nodes: Query<&mut DebugNode>,
 ) {
     for transform in cursor.iter() {
+        let target = (10, 10);
+
         for grid in grid.iter() {
+            let mut a_star_grid = Grid::new(grid.size_x as i32, grid.size_y as i32);
             let cursor_coords = grid.to_cell_coords(&transform.translation);
 
+            let path = a_star_grid.astar((cursor_coords.0 as i32, cursor_coords.1 as i32), (target.0 as i32, target.1 as i32)).unwrap();
+
             for mut node in nodes.iter_mut() {
-                if node.x == cursor_coords.0 && node.y == cursor_coords.1 {
-                    node.color = Color::RED;
+                node.color = if node.x == cursor_coords.0 && node.y == cursor_coords.1 {
+                    Color::RED
+                } else if node.x == target.0 && node.y == target.1 {
+                    Color::GREEN
                 } else {
-                    node.color = Color::WHITE;
+                    Color::WHITE
+                };
+
+                if node.color == Color::WHITE && path.contains(&(node.x as i32, node.y as i32)) {
+                    node.color = Color::CYAN;
                 }
             }
         }

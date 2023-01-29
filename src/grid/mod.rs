@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use bevy::prelude::*;
 
 mod pathfinding;
+mod a_star;
 pub mod plugin;
 
 const INFINITY: u32 = 9999999;

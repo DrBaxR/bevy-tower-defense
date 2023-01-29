@@ -20,9 +20,9 @@ impl PartialEq for Node {
 
 impl Eq for Node {}
 
-struct Grid {
-    width: i32,
-    height: i32,
+pub struct Grid {
+    pub width: i32,
+    pub height: i32,
     nodes: Matrix<Rc<RefCell<Node>>>,
 }
 
