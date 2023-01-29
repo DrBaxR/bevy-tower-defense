@@ -101,7 +101,8 @@ impl Grid {
                     g_score: INFINITY,
                     parent: None,
                     // TODO: make a constructor that takes a matrix as input and creates the grid based on it
-                    walkable: true,
+                    walkable: !(x >= 14 && x <= 18 && y >= 9 && y <= 11 || x == 25 && y == 10)
+                    // walkable: true,
                 })));
             }
 

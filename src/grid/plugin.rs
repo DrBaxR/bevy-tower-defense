@@ -1,9 +1,8 @@
-use bevy::{ecs::bundle, prelude::*};
+use bevy::prelude::*;
 
 use crate::cursor::Cursor;
 
 use super::a_star::Grid;
-
 
 #[derive(Bundle)]
 struct SquareBundle {
@@ -113,7 +112,7 @@ fn spawn_grid(mut commands: Commands) {
     commands.spawn((grid, Name::new("Grid")));
 }
 
-fn find_path(
+fn find_and_color_path(
     cursor: Query<&Transform, With<Cursor>>,
     grid: Query<&DebugGrid>,
     mut nodes: Query<&mut DebugNode>,
@@ -122,10 +121,17 @@ fn find_path(
         let target = (10, 10);
 
         for grid in grid.iter() {
+            // TODO: create this grid and set the colors from a file
+            // 0000
+            // 0100
+            // 0110
             let mut a_star_grid = Grid::new(grid.size_x as i32, grid.size_y as i32);
             let cursor_coords = grid.to_cell_coords(&transform.translation);
 
-            let path = a_star_grid.astar((cursor_coords.0 as i32, cursor_coords.1 as i32), (target.0 as i32, target.1 as i32)).unwrap();
+            let path = a_star_grid.astar(
+                (cursor_coords.0 as i32, cursor_coords.1 as i32),
+                (target.0 as i32, target.1 as i32),
+            );
 
             for mut node in nodes.iter_mut() {
                 node.color = if node.x == cursor_coords.0 && node.y == cursor_coords.1 {
@@ -136,8 +142,17 @@ fn find_path(
                     Color::WHITE
                 };
 
-                if node.color == Color::WHITE && path.contains(&(node.x as i32, node.y as i32)) {
-                    node.color = Color::CYAN;
+                if let Some(path) = &path {
+                    if node.color == Color::WHITE && path.contains(&(node.x as i32, node.y as i32))
+                    {
+                        node.color = Color::CYAN;
+                    }
+                }
+
+                if node.x >= 14 && node.x <= 18 && node.y >= 9 && node.y <= 11
+                    || node.x == 25 && node.y == 10
+                {
+                    node.color = Color::BLUE;
                 }
             }
         }
@@ -156,6 +171,6 @@ impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_grid)
             .add_system(color_nodes)
-            .add_system(find_path);
+            .add_system(find_and_color_path);
     }
 }
