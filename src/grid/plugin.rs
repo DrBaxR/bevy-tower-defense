@@ -1,8 +1,12 @@
+use std::fs;
+
 use bevy::prelude::*;
 
 use crate::cursor::Cursor;
 
 use super::a_star::Grid;
+
+const MAP_FILE_PATH: &str = "assets/sample.map";
 
 #[derive(Bundle)]
 struct SquareBundle {
@@ -93,8 +97,9 @@ impl DebugGrid {
 }
 
 fn spawn_grid(mut commands: Commands) {
-    // TODO: make the size of this grid also change automatically to the file matrix
-    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 20, 20);
+    let map_str = fs::read_to_string(MAP_FILE_PATH).expect("Could not read .map file");
+    let (width, height) = Grid::get_map_size(&map_str);
+    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., width, height);
     const CELL_GAP: f32 = 2.;
 
     for i in 0..grid.size_x {
@@ -122,7 +127,7 @@ fn find_and_color_path(
         let target = (19, 19);
 
         for grid in grid.iter() {
-            let mut a_star_grid = Grid::from("assets/sample.map");
+            let mut a_star_grid = Grid::from(MAP_FILE_PATH);
             let cursor_coords = grid.to_cell_coords(&transform.translation);
 
             let path = a_star_grid.astar(

@@ -65,11 +65,11 @@ enum MapNodeType {
 type Matrix<T> = Vec<Vec<T>>;
 
 fn width<T>(mat: &Matrix<T>) -> usize {
-    mat.get(0).map(|line| line.len()).unwrap_or(0)
+    mat.len()
 }
 
 fn height<T>(mat: &Matrix<T>) -> usize {
-    mat.len()
+    mat.get(0).map(|line| line.len()).unwrap_or(0)
 }
 
 type GridCoord = (i32, i32);
@@ -103,7 +103,7 @@ fn min_f(nodes: &Vec<Rc<RefCell<Node>>>) -> Option<(usize, Rc<RefCell<Node>>)> {
 
 impl From<&str> for Grid {
     fn from(path: &str) -> Self {
-        let map_str = fs::read_to_string(path).expect("no file");
+        let map_str = fs::read_to_string(path).expect("Error while reading the .map file");
         let node_type_mat = Grid::load_map_matrix(map_str);
 
         let mut nodes = vec![];
@@ -141,9 +141,7 @@ impl Grid {
     }
 
     fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
-        let split: Vec<&str> = map_str.split("\n").collect();
-        let width = split[0].len();
-        let height = split.len();
+        let (width, height) = Grid::get_map_size(&map_str);
         let mut matrix: Matrix<MapNodeType> = vec![vec![MapNodeType::Walkable; height]; width];
 
         map_str.split("\n").enumerate().for_each(|(line_number, line)| {
@@ -158,6 +156,12 @@ impl Grid {
         });
 
         matrix
+    }
+
+    pub fn get_map_size(map_str: &String) -> (usize, usize) {
+        let split: Vec<&str> = map_str.split("\n").collect();
+
+        (split[0].len(), split.len())
     }
 
     pub fn astar(&mut self, start: GridCoord, end: GridCoord) -> Option<Vec<GridCoord>> {
