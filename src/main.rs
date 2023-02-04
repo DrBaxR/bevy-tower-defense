@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use tower_defense::{
     bullet::BulletPlugin, cursor::CursorPlugin, lifetime::LifetimePlugin,
-    setup_camera, setup_entities, grid::plugin::GridPlugin,
+    setup_camera, setup_entities, grid::GridPlugin,
 };
 
 fn main() {

@@ -1,9 +1,11 @@
 use std::{cell::RefCell, rc::Rc, fs};
 
+pub mod util;
+
 const INFINITY: i32 = 99999999;
 
 #[derive(Debug)]
-struct Node {
+pub struct Node {
     x: usize,
     y: usize,
     f_score: i32,
@@ -64,42 +66,7 @@ enum MapNodeType {
 
 type Matrix<T> = Vec<Vec<T>>;
 
-fn width<T>(mat: &Matrix<T>) -> usize {
-    mat.len()
-}
-
-fn height<T>(mat: &Matrix<T>) -> usize {
-    mat.get(0).map(|line| line.len()).unwrap_or(0)
-}
-
 type GridCoord = (i32, i32);
-
-fn distance(start: GridCoord, end: GridCoord) -> i32 {
-    let dif_x = (start.0 - end.0).abs();
-    let dif_y = (start.1 - end.1).abs();
-
-    if dif_x > dif_y {
-        return 14 * dif_y + (dif_x - dif_y) * 10;
-    }
-
-    return 14 * dif_x + (dif_y - dif_x) * 10;
-}
-
-fn min_f(nodes: &Vec<Rc<RefCell<Node>>>) -> Option<(usize, Rc<RefCell<Node>>)> {
-    let mut min_index = 0;
-    if let Some(mut min) = nodes.get(0) {
-        for node in nodes.iter().enumerate().skip(1) {
-            if node.1.as_ref().borrow().f_score < min.as_ref().borrow().f_score {
-                min = node.1;
-                min_index = node.0;
-            }
-        }
-
-        Some((min_index, Rc::clone(min)))
-    } else {
-        None
-    }
-}
 
 impl From<&str> for Grid {
     fn from(path: &str) -> Self {
@@ -107,10 +74,10 @@ impl From<&str> for Grid {
         let node_type_mat = Grid::load_map_matrix(map_str);
 
         let mut nodes = vec![];
-        for x in 0..width(&node_type_mat) {
+        for x in 0..util::width(&node_type_mat) {
             let mut y_nodes = vec![]; 
 
-            for y in 0..height(&node_type_mat) {
+            for y in 0..util::height(&node_type_mat) {
                 let x = x as usize;
                 let y = y as usize;
 
@@ -128,8 +95,8 @@ impl From<&str> for Grid {
         }
 
         Grid {
-            width: width(&node_type_mat) as i32,
-            height: height(&node_type_mat) as i32,
+            width: util::width(&node_type_mat) as i32,
+            height: util::height(&node_type_mat) as i32,
             nodes
         }
     }
@@ -141,7 +108,7 @@ impl Grid {
     }
 
     fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
-        let (width, height) = Grid::get_map_size(&map_str);
+        let (width, height) = util::get_map_size(&map_str);
         let mut matrix: Matrix<MapNodeType> = vec![vec![MapNodeType::Walkable; height]; width];
 
         map_str.split("\n").enumerate().for_each(|(line_number, line)| {
@@ -158,21 +125,15 @@ impl Grid {
         matrix
     }
 
-    pub fn get_map_size(map_str: &String) -> (usize, usize) {
-        let split: Vec<&str> = map_str.split("\n").collect();
-
-        (split[0].len(), split.len())
-    }
-
     pub fn astar(&mut self, start: GridCoord, end: GridCoord) -> Option<Vec<GridCoord>> {
         let start_node = Rc::clone(&self.nodes[start.0 as usize][start.1 as usize]);
         let mut open: Vec<Rc<RefCell<Node>>> = vec![Rc::clone(&start_node)];
 
         start_node.borrow_mut().g_score = 0;
-        start_node.borrow_mut().f_score = distance(start, end);
+        start_node.borrow_mut().f_score = util::distance(start, end);
 
         loop {
-            if let Some((current_index, current)) = min_f(&open) {
+            if let Some((current_index, current)) = util::min_f(&open) {
                 if *current.as_ref().borrow()
                     == *self.nodes[end.0 as usize][end.1 as usize].as_ref().borrow()
                 {
@@ -195,14 +156,14 @@ impl Grid {
                     );
 
                     let tentative_g = current.as_ref().borrow().g_score
-                        + distance(current_coords, neighbour_coords);
+                        + util::distance(current_coords, neighbour_coords);
                     if tentative_g < neighbour.as_ref().borrow().g_score {
                         {
                             let mut neighbour = neighbour.as_ref().borrow_mut();
                             neighbour.parent = Some(current_coords);
                             neighbour.g_score = tentative_g;
                             neighbour.f_score =
-                                tentative_g + distance(current_coords, neighbour_coords);
+                                tentative_g + util::distance(current_coords, neighbour_coords);
                         }
 
                         if !open.iter().any(|node| {
