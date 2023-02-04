@@ -56,7 +56,7 @@ impl Grid {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum MapNodeType {
     Walkable,
     Obstacle,
@@ -141,18 +141,19 @@ impl Grid {
     }
 
     fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
-        let mut matrix: Matrix<MapNodeType> = vec![];
+        let split: Vec<&str> = map_str.split("\n").collect();
+        let width = split[0].len();
+        let height = split.len();
+        let mut matrix: Matrix<MapNodeType> = vec![vec![MapNodeType::Walkable; height]; width];
 
         map_str.split("\n").enumerate().for_each(|(line_number, line)| {
-            matrix.push(vec![]);
-
-            line.chars().for_each(|char| {
+            line.chars().enumerate().for_each(|(char_number, char)| {
                 let node_type = match char {
                     '1' => MapNodeType::Obstacle,
                     _ => MapNodeType::Walkable
                 };
 
-                matrix[line_number].push(node_type);
+                matrix[char_number][height - line_number - 1] = node_type;
             });
         });
 

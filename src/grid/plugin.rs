@@ -93,6 +93,7 @@ impl DebugGrid {
 }
 
 fn spawn_grid(mut commands: Commands) {
+    // TODO: make the size of this grid also change automatically to the file matrix
     let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 20, 20);
     const CELL_GAP: f32 = 2.;
 
