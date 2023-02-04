@@ -93,7 +93,7 @@ impl DebugGrid {
 }
 
 fn spawn_grid(mut commands: Commands) {
-    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 30, 20);
+    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., 20, 20);
     const CELL_GAP: f32 = 2.;
 
     for i in 0..grid.size_x {
@@ -118,14 +118,10 @@ fn find_and_color_path(
     mut nodes: Query<&mut DebugNode>,
 ) {
     for transform in cursor.iter() {
-        let target = (10, 10);
+        let target = (19, 19);
 
         for grid in grid.iter() {
-            // TODO: create this grid and set the colors from a file
-            // 0000
-            // 0100
-            // 0110
-            let mut a_star_grid = Grid::new(grid.size_x as i32, grid.size_y as i32);
+            let mut a_star_grid = Grid::from("assets/sample.map");
             let cursor_coords = grid.to_cell_coords(&transform.translation);
 
             let path = a_star_grid.astar(
@@ -149,9 +145,7 @@ fn find_and_color_path(
                     }
                 }
 
-                if node.x >= 14 && node.x <= 18 && node.y >= 9 && node.y <= 11
-                    || node.x == 25 && node.y == 10
-                {
+                if !a_star_grid.is_walkable((node.x as i32, node.y as i32)) {
                     node.color = Color::BLUE;
                 }
             }
@@ -165,11 +159,16 @@ fn color_nodes(mut nodes: Query<(&mut Sprite, &DebugNode)>) {
     }
 }
 
+fn load_asset() {
+}
+
+
 pub struct GridPlugin;
 
 impl Plugin for GridPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_grid)
+            .add_startup_system(load_asset)
             .add_system(color_nodes)
             .add_system(find_and_color_path);
     }

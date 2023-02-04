@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, fs};
 
 const INFINITY: i32 = 99999999;
 
@@ -56,7 +56,22 @@ impl Grid {
     }
 }
 
+#[derive(Debug, PartialEq)]
+enum MapNodeType {
+    Walkable,
+    Obstacle,
+}
+
 type Matrix<T> = Vec<Vec<T>>;
+
+fn width<T>(mat: &Matrix<T>) -> usize {
+    mat.get(0).map(|line| line.len()).unwrap_or(0)
+}
+
+fn height<T>(mat: &Matrix<T>) -> usize {
+    mat.len()
+}
+
 type GridCoord = (i32, i32);
 
 fn distance(start: GridCoord, end: GridCoord) -> i32 {
@@ -86,23 +101,26 @@ fn min_f(nodes: &Vec<Rc<RefCell<Node>>>) -> Option<(usize, Rc<RefCell<Node>>)> {
     }
 }
 
-impl Grid {
-    pub fn new(width: i32, height: i32) -> Self {
+impl From<&str> for Grid {
+    fn from(path: &str) -> Self {
+        let map_str = fs::read_to_string(path).expect("no file");
+        let node_type_mat = Grid::load_map_matrix(map_str);
+
         let mut nodes = vec![];
+        for x in 0..width(&node_type_mat) {
+            let mut y_nodes = vec![]; 
 
-        for x in 0..width {
-            let mut y_nodes = vec![];
+            for y in 0..height(&node_type_mat) {
+                let x = x as usize;
+                let y = y as usize;
 
-            for y in 0..height {
                 y_nodes.push(Rc::new(RefCell::new(Node {
-                    x: x as usize,
-                    y: y as usize,
+                    x,
+                    y,
                     f_score: INFINITY,
                     g_score: INFINITY,
                     parent: None,
-                    // TODO: make a constructor that takes a matrix as input and creates the grid based on it
-                    walkable: !(x >= 14 && x <= 18 && y >= 9 && y <= 11 || x == 25 && y == 10)
-                    // walkable: true,
+                    walkable: node_type_mat[x][y] == MapNodeType::Walkable,
                 })));
             }
 
@@ -110,10 +128,35 @@ impl Grid {
         }
 
         Grid {
-            width,
-            height,
-            nodes,
+            width: width(&node_type_mat) as i32,
+            height: height(&node_type_mat) as i32,
+            nodes
         }
+    }
+}
+
+impl Grid {
+    pub fn is_walkable(&self, coord: GridCoord) -> bool {
+        self.nodes[coord.0 as usize][coord.1 as usize].as_ref().borrow().walkable
+    }
+
+    fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
+        let mut matrix: Matrix<MapNodeType> = vec![];
+
+        map_str.split("\n").enumerate().for_each(|(line_number, line)| {
+            matrix.push(vec![]);
+
+            line.chars().for_each(|char| {
+                let node_type = match char {
+                    '1' => MapNodeType::Obstacle,
+                    _ => MapNodeType::Walkable
+                };
+
+                matrix[line_number].push(node_type);
+            });
+        });
+
+        matrix
     }
 
     pub fn astar(&mut self, start: GridCoord, end: GridCoord) -> Option<Vec<GridCoord>> {
