@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, fs};
+use std::{cell::RefCell, fs, rc::Rc};
 
 use self::util::MapNodeType;
 
@@ -71,7 +71,7 @@ impl From<&str> for Grid {
 
         let mut nodes = vec![];
         for x in 0..util::width(&node_type_mat) {
-            let mut y_nodes = vec![]; 
+            let mut y_nodes = vec![];
 
             for y in 0..util::height(&node_type_mat) {
                 let x = x as usize;
@@ -93,17 +93,25 @@ impl From<&str> for Grid {
         Grid {
             width: util::width(&node_type_mat) as i32,
             height: util::height(&node_type_mat) as i32,
-            nodes
+            nodes,
         }
     }
 }
 
 impl Grid {
     pub fn is_walkable(&self, coord: GridCoord) -> bool {
-        self.nodes[coord.0 as usize][coord.1 as usize].as_ref().borrow().walkable
+        self.nodes[coord.0 as usize][coord.1 as usize]
+            .as_ref()
+            .borrow()
+            .walkable
     }
 
-    pub fn astar(&mut self, start: GridCoord, end: GridCoord) -> Option<Vec<GridCoord>> {
+    pub fn astar(
+        &mut self,
+        start: GridCoord,
+        end: GridCoord,
+        waypoints: bool,
+    ) -> Option<Vec<GridCoord>> {
         let start_node = Rc::clone(&self.nodes[start.0 as usize][start.1 as usize]);
         let end_node = Rc::clone(&self.nodes[end.0 as usize][end.1 as usize]);
         let mut open: Vec<Rc<RefCell<Node>>> = vec![Rc::clone(&start_node)];
@@ -120,10 +128,16 @@ impl Grid {
                 if *current.as_ref().borrow()
                     == *self.nodes[end.0 as usize][end.1 as usize].as_ref().borrow()
                 {
-                    return Some(self.reconstruct_path((
+                    let path = self.reconstruct_path((
                         current.as_ref().borrow().x as i32,
                         current.as_ref().borrow().y as i32,
-                    )));
+                    ));
+
+                    return Some(if waypoints {
+                        util::simplify_path(path)
+                    } else {
+                        path
+                    });
                 }
 
                 open.remove(current_index);

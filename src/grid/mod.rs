@@ -135,6 +135,7 @@ fn find_and_color_path(
             let path = a_star_grid.astar(
                 (cursor_coords.0 as i32, cursor_coords.1 as i32),
                 (target.0 as i32, target.1 as i32),
+                true,
             );
 
             for mut node in nodes.iter_mut() {
@@ -149,7 +150,7 @@ fn find_and_color_path(
                 if let Some(path) = &path {
                     if node.color == Color::WHITE && path.contains(&(node.x as i32, node.y as i32))
                     {
-                        node.color = Color::CYAN;
+                        node.color = Color::GOLD;
                     }
                 }
 
@@ -172,6 +173,10 @@ fn load_asset() {}
 pub struct GridPlugin;
 
 impl Plugin for GridPlugin {
+    // TODO: option to disable debug mode
+    // TODO: debug show path with lines
+    // TODO: somwhow request path to the grid plugin
+    // TODO: agent that follows path
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_grid)
             .add_startup_system(load_asset)

@@ -1,7 +1,6 @@
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 
-use super::{Matrix, Node, GridCoord};
-
+use super::{GridCoord, Matrix, Node};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum MapNodeType {
@@ -27,16 +26,19 @@ pub fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
     let (width, height) = get_map_size(&map_str);
     let mut matrix: Matrix<MapNodeType> = vec![vec![MapNodeType::Walkable; height]; width];
 
-    map_str.split("\n").enumerate().for_each(|(line_number, line)| {
-        line.chars().enumerate().for_each(|(char_number, char)| {
-            let node_type = match char {
-                '1' => MapNodeType::Obstacle,
-                _ => MapNodeType::Walkable
-            };
+    map_str
+        .split("\n")
+        .enumerate()
+        .for_each(|(line_number, line)| {
+            line.chars().enumerate().for_each(|(char_number, char)| {
+                let node_type = match char {
+                    '1' => MapNodeType::Obstacle,
+                    _ => MapNodeType::Walkable,
+                };
 
-            matrix[char_number][height - line_number - 1] = node_type;
+                matrix[char_number][height - line_number - 1] = node_type;
+            });
         });
-    });
 
     matrix
 }
@@ -66,4 +68,29 @@ pub fn min_f(nodes: &Vec<Rc<RefCell<Node>>>) -> Option<(usize, Rc<RefCell<Node>>
     } else {
         None
     }
+}
+
+pub fn simplify_path(path: Vec<GridCoord>) -> Vec<GridCoord> {
+    if path.len() <= 3 {
+        return path;
+    }
+
+    let mut waypoints = vec![];
+    let mut prev_dir = sub_coords(path[0], path[1]);
+
+    for i in 1..path.len() - 1 {
+        let cur_dir = sub_coords(path[i], path[i - 1]);
+
+        if cur_dir != prev_dir {
+            waypoints.push(path[i - 1]);
+            prev_dir = cur_dir;
+        }
+    }
+
+    waypoints.push(path.last().unwrap().to_owned());
+    waypoints
+}
+
+fn sub_coords(a: GridCoord, b: GridCoord) -> (i32, i32) {
+    (a.0 - b.0, a.1 - b.1)
 }
