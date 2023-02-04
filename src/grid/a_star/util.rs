@@ -2,6 +2,13 @@ use std::{rc::Rc, cell::RefCell};
 
 use super::{Matrix, Node, GridCoord};
 
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum MapNodeType {
+    Walkable,
+    Obstacle,
+}
+
 pub fn width<T>(mat: &Matrix<T>) -> usize {
     mat.len()
 }
@@ -14,6 +21,24 @@ pub fn get_map_size(map_str: &String) -> (usize, usize) {
     let split: Vec<&str> = map_str.split("\n").collect();
 
     (split[0].len(), split.len())
+}
+
+pub fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
+    let (width, height) = get_map_size(&map_str);
+    let mut matrix: Matrix<MapNodeType> = vec![vec![MapNodeType::Walkable; height]; width];
+
+    map_str.split("\n").enumerate().for_each(|(line_number, line)| {
+        line.chars().enumerate().for_each(|(char_number, char)| {
+            let node_type = match char {
+                '1' => MapNodeType::Obstacle,
+                _ => MapNodeType::Walkable
+            };
+
+            matrix[char_number][height - line_number - 1] = node_type;
+        });
+    });
+
+    matrix
 }
 
 pub fn distance(start: GridCoord, end: GridCoord) -> i32 {

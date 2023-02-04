@@ -1,5 +1,7 @@
 use std::{cell::RefCell, rc::Rc, fs};
 
+use self::util::MapNodeType;
+
 pub mod util;
 
 const INFINITY: i32 = 99999999;
@@ -58,12 +60,6 @@ impl Grid {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-enum MapNodeType {
-    Walkable,
-    Obstacle,
-}
-
 type Matrix<T> = Vec<Vec<T>>;
 
 type GridCoord = (i32, i32);
@@ -71,7 +67,7 @@ type GridCoord = (i32, i32);
 impl From<&str> for Grid {
     fn from(path: &str) -> Self {
         let map_str = fs::read_to_string(path).expect("Error while reading the .map file");
-        let node_type_mat = Grid::load_map_matrix(map_str);
+        let node_type_mat = util::load_map_matrix(map_str);
 
         let mut nodes = vec![];
         for x in 0..util::width(&node_type_mat) {
@@ -107,27 +103,14 @@ impl Grid {
         self.nodes[coord.0 as usize][coord.1 as usize].as_ref().borrow().walkable
     }
 
-    fn load_map_matrix(map_str: String) -> Matrix<MapNodeType> {
-        let (width, height) = util::get_map_size(&map_str);
-        let mut matrix: Matrix<MapNodeType> = vec![vec![MapNodeType::Walkable; height]; width];
-
-        map_str.split("\n").enumerate().for_each(|(line_number, line)| {
-            line.chars().enumerate().for_each(|(char_number, char)| {
-                let node_type = match char {
-                    '1' => MapNodeType::Obstacle,
-                    _ => MapNodeType::Walkable
-                };
-
-                matrix[char_number][height - line_number - 1] = node_type;
-            });
-        });
-
-        matrix
-    }
-
     pub fn astar(&mut self, start: GridCoord, end: GridCoord) -> Option<Vec<GridCoord>> {
         let start_node = Rc::clone(&self.nodes[start.0 as usize][start.1 as usize]);
+        let end_node = Rc::clone(&self.nodes[end.0 as usize][end.1 as usize]);
         let mut open: Vec<Rc<RefCell<Node>>> = vec![Rc::clone(&start_node)];
+
+        if !start_node.borrow().walkable || !end_node.borrow().walkable {
+            return None;
+        }
 
         start_node.borrow_mut().g_score = 0;
         start_node.borrow_mut().f_score = util::distance(start, end);
