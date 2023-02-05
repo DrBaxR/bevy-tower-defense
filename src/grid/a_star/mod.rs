@@ -62,7 +62,7 @@ impl Grid {
 
 type Matrix<T> = Vec<Vec<T>>;
 
-type GridCoord = (i32, i32);
+pub type GridCoord = (i32, i32);
 
 impl From<&str> for Grid {
     fn from(path: &str) -> Self {
