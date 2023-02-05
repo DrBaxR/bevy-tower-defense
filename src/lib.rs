@@ -151,11 +151,15 @@ pub struct GridAgent {
     pub speed: f32,
 }
 
+// TODO: consider making this a property of the GridAgent component
+const ERROR_MARGIN: f32 = 0.5;
+
 pub fn follow_path(
     time: Res<Time>,
     mut agents: Query<(&mut Transform, &mut GridAgent)>,
     grid: Query<&DebugGrid>,
 ) {
+    // TODO: cleanup
     let grid = grid.single();
 
     for (mut transform, mut agent) in agents.iter_mut() {
@@ -165,11 +169,9 @@ pub fn follow_path(
             if next_waypoint == None {
                 agent.path = None;
             } else if let Some(next_waypoint) = next_waypoint {
-                let current_pos = grid.to_cell_coords(&transform.translation);
-
-                // TODO: consider comparing actual world positions, since making turns looks a little weird
-                if current_pos.0 == next_waypoint.0 as usize
-                    && current_pos.1 == next_waypoint.1 as usize
+                let target_pos = grid.to_screen_coords(next_waypoint.0 as usize, next_waypoint.1 as usize);
+                if transform.translation.x > target_pos.x - ERROR_MARGIN && transform.translation.x < target_pos.x + ERROR_MARGIN
+                    && transform.translation.y > target_pos.y - ERROR_MARGIN && transform.translation.y < target_pos.y + ERROR_MARGIN
                 {
                     path.remove(0);
                     return;
