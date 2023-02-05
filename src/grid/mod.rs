@@ -98,22 +98,24 @@ impl DebugGrid {
     }
 }
 
-fn spawn_grid(mut commands: Commands) {
+fn spawn_grid(mut commands: Commands, debug: bool) {
     let map_str = fs::read_to_string(MAP_FILE_PATH).expect("Could not read .map file");
     let (width, height) = a_star::util::get_map_size(&map_str);
     let grid = DebugGrid::new(Vec2::new(0., 0.), 20., width, height);
     const CELL_GAP: f32 = 2.;
 
-    for i in 0..grid.size_x {
-        for j in 0..grid.size_y {
-            commands.spawn((
-                SquareBundle::new(&grid.to_screen_coords(i, j), grid.cell_size - CELL_GAP),
-                DebugNode {
-                    color: Color::WHITE,
-                    x: i,
-                    y: j,
-                },
-            ));
+    if debug {
+        for i in 0..grid.size_x {
+            for j in 0..grid.size_y {
+                commands.spawn((
+                    SquareBundle::new(&grid.to_screen_coords(i, j), grid.cell_size - CELL_GAP),
+                    DebugNode {
+                        color: Color::WHITE,
+                        x: i,
+                        y: j,
+                    },
+                ));
+            }
         }
     }
 
@@ -168,19 +170,20 @@ fn color_nodes(mut nodes: Query<(&mut Sprite, &DebugNode)>) {
     }
 }
 
-fn load_asset() {}
-
-pub struct GridPlugin;
+pub struct GridPlugin {
+    pub debug: bool,
+}
 
 impl Plugin for GridPlugin {
-    // TODO: option to disable debug mode
     // TODO: debug show path with lines
     // TODO: somwhow request path to the grid plugin
     // TODO: agent that follows path
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_grid)
-            .add_startup_system(load_asset)
-            .add_system(color_nodes)
-            .add_system(find_and_color_path);
+        let debug = self.debug;
+        app.add_startup_system(move |commands: Commands| spawn_grid(commands, debug));
+
+        if debug {
+            app.add_system(color_nodes).add_system(find_and_color_path);
+        }
     }
 }
