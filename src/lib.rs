@@ -82,7 +82,7 @@ pub fn setup_enemy(mut commands: Commands, grid: Query<&DebugGrid>, mut debug_no
             transform: Transform::from_translation(agent_pos).with_scale(Vec3::new(10., 10., 1.)),
             ..default()
         },
-        GridAgent { path, speed: 50. },
+        GridAgent { path, speed: 50., error_margin: 0.5 },
     ));
 
 
@@ -102,7 +102,7 @@ pub fn setup_enemy(mut commands: Commands, grid: Query<&DebugGrid>, mut debug_no
             transform: Transform::from_translation(agent_pos).with_scale(Vec3::new(10., 10., 1.)),
             ..default()
         },
-        GridAgent { path, speed: 50. },
+        GridAgent { path, speed: 50., error_margin: 0.5 },
     ));
 
     let grid_pos = (15, 19);
@@ -121,7 +121,7 @@ pub fn setup_enemy(mut commands: Commands, grid: Query<&DebugGrid>, mut debug_no
             transform: Transform::from_translation(agent_pos).with_scale(Vec3::new(10., 10., 1.)),
             ..default()
         },
-        GridAgent { path, speed: 50. },
+        GridAgent { path, speed: 50., error_margin: 0.5 },
     ));
 
     let grid_pos = (19, 0);
@@ -140,7 +140,7 @@ pub fn setup_enemy(mut commands: Commands, grid: Query<&DebugGrid>, mut debug_no
             transform: Transform::from_translation(agent_pos).with_scale(Vec3::new(10., 10., 1.)),
             ..default()
         },
-        GridAgent { path, speed: 50. },
+        GridAgent { path, speed: 50., error_margin: 0.5 },
     ));
 }
 
@@ -149,10 +149,8 @@ pub fn setup_enemy(mut commands: Commands, grid: Query<&DebugGrid>, mut debug_no
 pub struct GridAgent {
     pub path: Option<Vec<GridCoord>>,
     pub speed: f32,
+    pub error_margin: f32, // how much further from the waypoint it can go
 }
-
-// TODO: consider making this a property of the GridAgent component
-const ERROR_MARGIN: f32 = 0.5;
 
 pub fn follow_path(
     time: Res<Time>,
@@ -163,6 +161,8 @@ pub fn follow_path(
     let grid = grid.single();
 
     for (mut transform, mut agent) in agents.iter_mut() {
+        let error_margin = agent.error_margin;
+
         if let Some(path) = &mut agent.path {
             let next_waypoint = path.get(0);
 
@@ -170,8 +170,8 @@ pub fn follow_path(
                 agent.path = None;
             } else if let Some(next_waypoint) = next_waypoint {
                 let target_pos = grid.to_screen_coords(next_waypoint.0 as usize, next_waypoint.1 as usize);
-                if transform.translation.x > target_pos.x - ERROR_MARGIN && transform.translation.x < target_pos.x + ERROR_MARGIN
-                    && transform.translation.y > target_pos.y - ERROR_MARGIN && transform.translation.y < target_pos.y + ERROR_MARGIN
+                if transform.translation.x > target_pos.x - error_margin && transform.translation.x < target_pos.x + error_margin
+                    && transform.translation.y > target_pos.y - error_margin && transform.translation.y < target_pos.y + error_margin
                 {
                     path.remove(0);
                     return;
