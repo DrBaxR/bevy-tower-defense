@@ -1,4 +1,5 @@
 pub mod a_star;
+pub mod agent;
 
 use std::fs;
 
@@ -8,7 +9,7 @@ use crate::grid::a_star::util::MapNodeType;
 
 use a_star::Grid;
 
-use self::a_star::GridCoord;
+use self::{a_star::GridCoord, agent::follow_path};
 
 const MAP_FILE_PATH: &str = "assets/walls.map";
 
@@ -152,7 +153,8 @@ impl Plugin for GridPlugin {
         let debug = self.debug;
         app.add_startup_system_to_stage(StartupStage::PreStartup, move |commands: Commands| {
             spawn_grid(commands, debug)
-        });
+        })
+        .add_system(follow_path);
 
         if debug {
             app.add_system(color_nodes);

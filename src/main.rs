@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use tower_defense::{
     bullet::BulletPlugin, cursor::CursorPlugin, grid::GridPlugin, lifetime::LifetimePlugin,
-    setup_camera, setup_enemy, setup_entities, follow_path,
+    setup_camera, setup_enemy, setup_entities,
 };
 
 fn main() {
@@ -31,6 +31,5 @@ fn main() {
                 .with_system(setup_entities)
                 .with_system(setup_enemy),
         )
-        .add_system(follow_path)
         .run();
 }
