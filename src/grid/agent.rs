@@ -14,7 +14,6 @@ pub fn follow_path(
     mut agents: Query<(&mut Transform, &mut GridAgent)>,
     grid: Query<&DebugGrid>,
 ) {
-    // TODO: cleanup
     let grid = grid.single();
 
     for (mut transform, mut agent) in agents.iter_mut() {
@@ -28,24 +27,32 @@ pub fn follow_path(
             } else if let Some(next_waypoint) = next_waypoint {
                 let target_pos =
                     grid.to_screen_coords(next_waypoint.0 as usize, next_waypoint.1 as usize);
-                if transform.translation.x > target_pos.x - error_margin
-                    && transform.translation.x < target_pos.x + error_margin
-                    && transform.translation.y > target_pos.y - error_margin
-                    && transform.translation.y < target_pos.y + error_margin
-                {
+
+                if reached_waypoint(&transform.translation, &target_pos, error_margin) {
                     path.remove(0);
                     return;
                 }
 
-                // move to the next waypoint
-                let mut direction = grid
-                    .to_screen_coords(next_waypoint.0 as usize, next_waypoint.1 as usize)
-                    - Vec2::new(transform.translation.x, transform.translation.y);
-                direction = direction.normalize() * agent.speed;
+                let direction =
+                    direction_towards(&grid, next_waypoint, &transform.translation) * agent.speed;
 
                 transform.translation = transform.translation
                     + Vec3::new(direction.x, direction.y, 0.) * time.delta_seconds();
             }
         }
     }
+}
+
+fn reached_waypoint(current: &Vec3, target: &Vec2, error_margin: f32) -> bool {
+    current.x > target.x - error_margin
+        && current.x < target.x + error_margin
+        && current.y > target.y - error_margin
+        && current.y < target.y + error_margin
+}
+
+fn direction_towards(grid: &DebugGrid, next_waypoint: &(i32, i32), current_pos: &Vec3) -> Vec2 {
+    let direction = grid.to_screen_coords(next_waypoint.0 as usize, next_waypoint.1 as usize)
+        - Vec2::new(current_pos.x, current_pos.y);
+
+    direction.normalize()
 }
