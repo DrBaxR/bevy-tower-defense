@@ -26,7 +26,7 @@ fn main() {
         .add_plugin(GridPlugin {
             debug: true,
             cell_size: 20.,
-            map_file_path: "assets/walls.map",
+            map_file_path: "assets/full_size.map",
         })
         // other
         .add_startup_system_set(

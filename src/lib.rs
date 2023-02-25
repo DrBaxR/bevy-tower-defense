@@ -111,10 +111,11 @@ pub fn setup_enemy(
     }
     let target = (target.0 as i32, target.1 as i32);
 
+    // TODO: grid does not spawn at correct coordinates (slightly to left-down: check assets/full_size.map)
     // spawn agents
-    spawn_enemy(&mut commands, &grid, (0, 0), target);
-    spawn_enemy(&mut commands, &grid, (0, 10), target);
+    spawn_enemy(&mut commands, &grid, (2, 2), target);
+    spawn_enemy(&mut commands, &grid, (2, 10), target);
     spawn_enemy(&mut commands, &grid, (15, 19), target);
-    spawn_enemy(&mut commands, &grid, (19, 0), target);
+    spawn_enemy(&mut commands, &grid, (19, 2), target);
 }
 
