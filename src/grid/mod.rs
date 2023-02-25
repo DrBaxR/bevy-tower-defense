@@ -11,8 +11,6 @@ use a_star::Grid;
 
 use self::{a_star::GridCoord, agent::follow_path};
 
-const MAP_FILE_PATH: &str = "assets/walls.map";
-
 #[derive(Bundle)]
 struct SquareBundle {
     #[bundle]
@@ -44,6 +42,7 @@ pub struct DebugGrid {
     pub size_x: usize,
     pub size_y: usize,
     cells_offset: Vec2,
+    map_file_path: &'static str,
 }
 
 #[derive(Component)]
@@ -54,12 +53,13 @@ pub struct DebugNode {
 }
 
 impl DebugGrid {
-    fn new(position: Vec2, cell_size: f32, size_x: usize, size_y: usize) -> Self {
+    fn new(position: Vec2, cell_size: f32, size_x: usize, size_y: usize, map_file_path: &'static str) -> Self {
         Self {
             position,
             cell_size,
             size_x,
             size_y,
+            map_file_path,
             cells_offset: position
                 - Vec2::new(
                     cell_size * size_x as f32 / 2.,
@@ -102,17 +102,17 @@ impl DebugGrid {
 
     pub fn find_path(&self, start: GridCoord, end: GridCoord) -> Option<Vec<GridCoord>> {
         // TODO: optimization - don't create the grid every time, rethink
-        let mut a_star_grid = Grid::from(MAP_FILE_PATH);
+        let mut a_star_grid = Grid::from(self.map_file_path);
 
         a_star_grid.astar(start, end, true)
     }
 }
 
-fn spawn_grid(mut commands: Commands, debug: bool) {
-    let map_str = fs::read_to_string(MAP_FILE_PATH).expect("Could not read .map file");
+fn spawn_grid(mut commands: Commands, debug: bool, cell_size: f32, map_file_path: &'static str) {
+    let map_str = fs::read_to_string(map_file_path).expect("Could not read .map file");
     let (width, height) = a_star::util::get_map_size(&map_str);
     let map_grid = a_star::util::load_map_matrix(map_str);
-    let grid = DebugGrid::new(Vec2::new(0., 0.), 20., width, height);
+    let grid = DebugGrid::new(Vec2::new(0., 0.), cell_size, width, height, map_file_path);
     const CELL_GAP: f32 = 2.;
 
     if debug {
@@ -145,14 +145,18 @@ fn color_nodes(mut nodes: Query<(&mut Sprite, &DebugNode)>) {
 
 pub struct GridPlugin {
     pub debug: bool,
+    pub cell_size: f32,
+    pub map_file_path: &'static str,
 }
 
 impl Plugin for GridPlugin {
-    // TODO: debug show path with lines
     fn build(&self, app: &mut App) {
         let debug = self.debug;
+        let cell_size = self.cell_size;
+        let map_file_path = self.map_file_path;
+
         app.add_startup_system_to_stage(StartupStage::PreStartup, move |commands: Commands| {
-            spawn_grid(commands, debug)
+            spawn_grid(commands, debug, cell_size, map_file_path)
         })
         .add_system(follow_path);
 

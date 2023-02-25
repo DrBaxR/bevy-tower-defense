@@ -23,7 +23,11 @@ fn main() {
         .add_plugin(CursorPlugin)
         .add_plugin(BulletPlugin)
         .add_plugin(LifetimePlugin)
-        .add_plugin(GridPlugin { debug: true })
+        .add_plugin(GridPlugin {
+            debug: true,
+            cell_size: 20.,
+            map_file_path: "assets/walls.map",
+        })
         // other
         .add_startup_system_set(
             SystemSet::new()
