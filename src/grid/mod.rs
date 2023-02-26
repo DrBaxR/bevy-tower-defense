@@ -70,8 +70,8 @@ impl DebugGrid {
 
     pub fn to_screen_coords(&self, x: usize, y: usize) -> Vec2 {
         Vec2::new(
-            x as f32 * self.cell_size - self.cell_size / 2.,
-            y as f32 * self.cell_size - self.cell_size / 2.,
+            x as f32 * self.cell_size + self.cell_size / 2.,
+            y as f32 * self.cell_size + self.cell_size / 2.,
         ) + self.cells_offset
     }
 
