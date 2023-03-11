@@ -31,7 +31,7 @@ impl BulletBundle {
             },
             sprite: SpriteBundle {
                 sprite: Sprite {
-                    color: Color::RED,
+                    color: Color::GRAY,
                     ..default()
                 },
                 transform: Transform::from_translation(position)

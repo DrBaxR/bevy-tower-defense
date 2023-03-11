@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 
+use bullet::Shooter;
 use cursor::*;
-use grid::{a_star::GridCoord, DebugGrid, DebugNode, agent::GridAgent};
+use grid::{a_star::GridCoord, agent::GridAgent, DebugGrid};
 
 pub mod bullet;
 pub mod cursor;
@@ -33,23 +36,6 @@ pub fn setup_entities(mut commands: Commands) {
         },
         Cursor,
     ));
-
-    // TODO: uncomment when done with grid testing
-    // commands.spawn((
-    //     Name::new("Tower"),
-    //     SpriteBundle {
-    //         sprite: Sprite {
-    //             color: Color::WHITE,
-    //             ..default()
-    //         },
-    //         transform: Transform::from_xyz(0., 0., 1.).with_scale(Vec3::new(30., 30., 1.)),
-    //         ..default()
-    //     },
-    //     Shooter {
-    //         cooldown: Timer::new(Duration::from_millis(50000), TimerMode::Repeating),
-    //         target: Vec3::ZERO,
-    //     },
-    // ));
 }
 
 #[derive(Bundle)]
@@ -95,27 +81,44 @@ fn spawn_enemy(
     commands.spawn(EnemyBundle::new(agent_pos, path));
 }
 
-pub fn setup_enemy(
+#[derive(Resource)]
+pub struct SpawnTimer(pub Timer);
+
+pub fn constantly_spawn_enemies(
+    mut timer: ResMut<SpawnTimer>,
+    time: Res<Time>,
     mut commands: Commands,
     grid: Query<&DebugGrid>,
-    mut debug_nodes: Query<&mut DebugNode>,
 ) {
     let grid = grid.single();
-    let target = (10, 3);
 
-    // set color of target node
-    for mut node in debug_nodes.iter_mut() {
-        if node.x == target.0 && node.y == target.1 {
-            node.color = Color::GOLD;
-        }
+    if timer.0.tick(time.delta()).just_finished() {
+        spawn_enemy(
+            &mut commands,
+            &grid,
+            (0, grid.size_y / 2),
+            (grid.size_x as i32 - 1, grid.size_y as i32 / 2),
+        )
     }
-    let target = (target.0 as i32, target.1 as i32);
-
-    // TODO: grid does not spawn at correct coordinates (slightly to left-down: check assets/full_size.map)
-    // spawn agents
-    spawn_enemy(&mut commands, &grid, (2, 2), target);
-    spawn_enemy(&mut commands, &grid, (2, 10), target);
-    spawn_enemy(&mut commands, &grid, (15, 19), target);
-    spawn_enemy(&mut commands, &grid, (19, 2), target);
 }
 
+pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
+    let grid = grid.single();
+    let pos = grid.to_screen_coords(33, 20);
+
+    commands.spawn((
+        Name::new("Tower"),
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::GREEN,
+                ..default()
+            },
+            transform: Transform::from_xyz(pos.x, pos.y, 1.).with_scale(Vec3::new(15., 15., 1.)),
+            ..default()
+        },
+        Shooter {
+            cooldown: Timer::new(Duration::from_millis(1000), TimerMode::Repeating),
+            target: Vec3::ZERO,
+        },
+    ));
+}
