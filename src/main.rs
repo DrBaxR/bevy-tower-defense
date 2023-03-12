@@ -29,7 +29,7 @@ fn main() {
             map_file_path: "assets/full_size.map",
         })
         // other
-        .insert_resource(SpawnTimer(Timer::from_seconds(1., TimerMode::Repeating)))
+        .insert_resource(SpawnTimer(Timer::from_seconds(10., TimerMode::Repeating)))
         .add_startup_system_set(
             SystemSet::new()
                 .with_system(setup_camera)

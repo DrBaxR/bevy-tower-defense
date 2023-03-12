@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 
-use bullet::Shooter;
+use bullet::{Shooter, Targetable};
 use cursor::*;
 use grid::{a_star::GridCoord, agent::GridAgent, DebugGrid};
 
@@ -44,6 +44,7 @@ struct EnemyBundle {
     #[bundle]
     sprite: SpriteBundle,
     agent: GridAgent,
+    targetable: Targetable,
 }
 
 impl EnemyBundle {
@@ -63,6 +64,7 @@ impl EnemyBundle {
                 speed: 50.,
                 error_margin: 0.5,
             },
+            targetable: Targetable,
         }
     }
 }
@@ -118,7 +120,8 @@ pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
         },
         Shooter {
             cooldown: Timer::new(Duration::from_millis(1000), TimerMode::Repeating),
-            target: Vec3::ZERO,
+            target: None,
+            range: 300.,
         },
     ));
 }

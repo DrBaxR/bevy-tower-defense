@@ -54,8 +54,12 @@ fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &
 #[derive(Component)]
 pub struct Shooter {
     pub cooldown: Timer,
-    pub target: Vec3,
+    pub range: f32,
+    pub target: Option<Vec3>,
 }
+
+#[derive(Component)]
+pub struct Targetable;
 
 fn shoot_bullet(
     mut commands: Commands,
@@ -65,12 +69,42 @@ fn shoot_bullet(
     for (transform, mut shooter) in shooters.iter_mut() {
         shooter.cooldown.tick(time.delta());
 
-        if shooter.cooldown.finished() {
-            commands.spawn(BulletBundle::new(
-                transform.translation.clone(),
-                &shooter.target,
-                50.,
-            ));
+        if let Some(target) = shooter.target {
+            if shooter.cooldown.finished() {
+                let distance = transform.translation.distance(target);
+
+                if distance < shooter.range {
+                    commands.spawn(BulletBundle::new(
+                        transform.translation.clone(),
+                        &target,
+                        300.,
+                    ));
+                }
+            }
+        }
+    }
+}
+
+fn compute_target(
+    mut shooters: Query<(&Transform, &mut Shooter)>,
+    targetables: Query<&Transform, With<Targetable>>,
+) {
+    for (transform, mut shooter) in shooters.iter_mut() {
+        let shooter_pos = transform.translation;
+
+        for targetable_transform in targetables.iter() {
+            let targetable_pos = targetable_transform.translation;
+
+            if let Some(current_target) = shooter.target {
+                let shooter_to_current = shooter_pos.distance(current_target);
+                let shooter_to_targetable = shooter_pos.distance(targetable_pos);
+
+                if shooter_to_targetable < shooter_to_current {
+                    shooter.target = Some(targetable_pos);
+                }
+            } else {
+                shooter.target = Some(targetable_transform.translation);
+            }
         }
     }
 }
@@ -80,6 +114,7 @@ pub struct BulletPlugin;
 impl Plugin for BulletPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(update_bullet_position)
+            .add_system(compute_target)
             .add_system(shoot_bullet)
             .register_type::<Bullet>();
     }
