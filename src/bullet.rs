@@ -89,13 +89,21 @@ fn compute_target(
     mut shooters: Query<(&Transform, &mut Shooter)>,
     targetables: Query<&Transform, With<Targetable>>,
 ) {
+    // TODO: cleanup
     for (transform, mut shooter) in shooters.iter_mut() {
         let shooter_pos = transform.translation;
+        let mut targetables_iter = targetables.iter();
 
-        for targetable_transform in targetables.iter() {
+        if let Some(first) = targetables_iter.next() {
+            shooter.target = Some(first.translation);
+        }
+
+        for targetable_transform in targetables_iter {
+            // each frame reset to first targetable
             let targetable_pos = targetable_transform.translation;
 
             if let Some(current_target) = shooter.target {
+                // TODO: make this take distance from vec2's, since z is only used for layering
                 let shooter_to_current = shooter_pos.distance(current_target);
                 let shooter_to_targetable = shooter_pos.distance(targetable_pos);
 
