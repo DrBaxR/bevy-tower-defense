@@ -91,7 +91,7 @@ fn compute_target(
 ) {
     // TODO: cleanup
     for (transform, mut shooter) in shooters.iter_mut() {
-        let shooter_pos = transform.translation;
+        let shooter_pos = Vec2::new(transform.translation.x, transform.translation.y);
         let mut targetables_iter = targetables.iter();
 
         if let Some(first) = targetables_iter.next() {
@@ -100,15 +100,16 @@ fn compute_target(
 
         for targetable_transform in targetables_iter {
             // each frame reset to first targetable
-            let targetable_pos = targetable_transform.translation;
+            let targetable_pos = Vec2::new(targetable_transform.translation.x, targetable_transform.translation.y);
 
             if let Some(current_target) = shooter.target {
-                // TODO: make this take distance from vec2's, since z is only used for layering
+                let current_target = Vec2::new(current_target.x, current_target.y);
+
                 let shooter_to_current = shooter_pos.distance(current_target);
                 let shooter_to_targetable = shooter_pos.distance(targetable_pos);
 
                 if shooter_to_targetable < shooter_to_current {
-                    shooter.target = Some(targetable_pos);
+                    shooter.target = Some(targetable_transform.translation);
                 }
             } else {
                 shooter.target = Some(targetable_transform.translation);
