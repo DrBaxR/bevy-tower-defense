@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryIter, prelude::*};
 
 use crate::lifetime::Lifetime;
 
@@ -89,33 +89,45 @@ fn compute_target(
     mut shooters: Query<(&Transform, &mut Shooter)>,
     targetables: Query<&Transform, With<Targetable>>,
 ) {
-    // TODO: cleanup
     for (transform, mut shooter) in shooters.iter_mut() {
         let shooter_pos = Vec2::new(transform.translation.x, transform.translation.y);
-        let mut targetables_iter = targetables.iter();
+        let targetables_iter = targetables.iter();
 
-        if let Some(first) = targetables_iter.next() {
-            shooter.target = Some(first.translation);
-        }
+        shooter.target = get_shortest_distance_for(&shooter_pos, targetables_iter);
+    }
+}
 
-        for targetable_transform in targetables_iter {
-            // each frame reset to first targetable
-            let targetable_pos = Vec2::new(targetable_transform.translation.x, targetable_transform.translation.y);
+fn get_shortest_distance_for(
+    pos: &Vec2,
+    mut targetables_iter: QueryIter<&Transform, With<Targetable>>,
+) -> Option<Vec3> {
+    let mut shortest: Option<Vec3> = None;
 
-            if let Some(current_target) = shooter.target {
-                let current_target = Vec2::new(current_target.x, current_target.y);
+    if let Some(first) = targetables_iter.next() {
+        shortest = Some(first.translation);
+    }
 
-                let shooter_to_current = shooter_pos.distance(current_target);
-                let shooter_to_targetable = shooter_pos.distance(targetable_pos);
+    for targetable_transform in targetables_iter {
+        let targetable_pos = Vec2::new(
+            targetable_transform.translation.x,
+            targetable_transform.translation.y,
+        );
 
-                if shooter_to_targetable < shooter_to_current {
-                    shooter.target = Some(targetable_transform.translation);
-                }
-            } else {
-                shooter.target = Some(targetable_transform.translation);
+        if let Some(current_target) = shortest {
+            let current_target = Vec2::new(current_target.x, current_target.y);
+
+            let shooter_to_current = pos.distance(current_target);
+            let shooter_to_targetable = pos.distance(targetable_pos);
+
+            if shooter_to_targetable < shooter_to_current {
+                shortest = Some(targetable_transform.translation);
             }
+        } else {
+            shortest = Some(targetable_transform.translation);
         }
     }
+
+    shortest
 }
 
 pub struct BulletPlugin;
