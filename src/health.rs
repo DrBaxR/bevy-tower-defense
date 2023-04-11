@@ -16,10 +16,23 @@ fn apply_delta(mut damageables: Query<&mut Damageable>) {
     }
 }
 
-pub struct HealthPlugin;
+fn print_health(damageables: Query<(&Name, &Damageable)>) {
+    println!("health tick:");
+    for (name, damageable) in damageables.iter() {
+        println!("{} - {}/{}", name, damageable.health, damageable.max_health);
+    }
+}
+
+pub struct HealthPlugin {
+    pub debug: bool,
+}
 
 impl Plugin for HealthPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(apply_delta).register_type::<Damageable>();
+
+        if self.debug {
+            app.add_system(print_health);
+        }
     }
 }
