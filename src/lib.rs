@@ -5,10 +5,12 @@ use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 use bullet::{Shooter, Targetable};
 use cursor::*;
 use grid::{a_star::GridCoord, agent::GridAgent, DebugGrid};
+use health::Damageable;
 
 pub mod bullet;
 pub mod cursor;
 pub mod grid;
+pub mod health;
 pub mod lifetime;
 
 pub fn setup_camera(mut commands: Commands) {
@@ -45,6 +47,7 @@ struct EnemyBundle {
     sprite: SpriteBundle,
     agent: GridAgent,
     targetable: Targetable,
+    damageable: Damageable,
 }
 
 impl EnemyBundle {
@@ -65,6 +68,11 @@ impl EnemyBundle {
                 error_margin: 0.5,
             },
             targetable: Targetable,
+            damageable: Damageable {
+                max_health: 100.,
+                health: 100.,
+                delta: 0.,
+            },
         }
     }
 }
@@ -108,6 +116,7 @@ pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
     let grid = grid.single();
     let pos = grid.to_screen_coords(33, 20);
 
+    // TODO: make bullets damage enemies
     commands.spawn((
         Name::new("Tower"),
         SpriteBundle {
