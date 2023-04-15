@@ -2,18 +2,20 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::{lifetime::Lifetime, health::DamageDealer};
+use crate::{health::DamageDealer, lifetime::Lifetime};
 
-use super::Bullet;
+use super::bullet::Bullet;
+use super::Shootable;
 
 #[derive(Bundle)]
 pub struct BulletBundle {
     pub name: Name,
-    pub bullet: Bullet,
+    pub shootable: Shootable,
     pub lifetime: Lifetime,
     #[bundle]
     pub sprite: SpriteBundle,
     pub damage_dealer: DamageDealer,
+    pub bullet: Bullet,
 }
 
 impl BulletBundle {
@@ -23,7 +25,7 @@ impl BulletBundle {
 
         BulletBundle {
             name: Name::new("Bullet"),
-            bullet: Bullet { trajectory },
+            shootable: Shootable { trajectory },
             lifetime: Lifetime {
                 timer: Timer::new(Duration::from_millis(5000), TimerMode::Once),
             },
@@ -37,6 +39,7 @@ impl BulletBundle {
                 ..default()
             },
             damage_dealer: DamageDealer { damage: 10. },
+            bullet: Bullet,
         }
     }
 }

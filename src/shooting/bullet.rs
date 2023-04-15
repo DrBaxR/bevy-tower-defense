@@ -1,23 +1,16 @@
 use bevy::{ecs::query::QueryIter, prelude::*};
 
-use super::{Shooter, Targetable, Bullet, bundle::BulletBundle};
+use super::{Shooter, Targetable, bundle::BulletBundle, BulletShooter};
 
-
-pub fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &Bullet)>) {
-    for (mut transform, bullet) in bullets.iter_mut() {
-        transform.translation.x =
-            transform.translation.x + bullet.trajectory.x * time.delta_seconds();
-        transform.translation.y =
-            transform.translation.y + bullet.trajectory.y * time.delta_seconds();
-    }
-}
+#[derive(Reflect, Component)]
+pub struct Bullet;
 
 pub fn shoot_bullet(
     mut commands: Commands,
     time: Res<Time>,
-    mut shooters: Query<(&Transform, &mut Shooter)>,
+    mut shooters: Query<(&Transform, &mut Shooter, &BulletShooter)>,
 ) {
-    for (transform, mut shooter) in shooters.iter_mut() {
+    for (transform, mut shooter, _) in shooters.iter_mut() {
         shooter.cooldown.tick(time.delta());
 
         if let Some(target) = shooter.target {

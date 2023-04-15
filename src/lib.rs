@@ -5,7 +5,7 @@ use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 use cursor::*;
 use grid::{a_star::GridCoord, agent::GridAgent, DebugGrid};
 use health::Damageable;
-use shooting::{Targetable, Shooter};
+use shooting::{Targetable, Shooter, BulletShooter};
 
 pub mod shooting;
 pub mod cursor;
@@ -131,5 +131,6 @@ pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
             target: None,
             range: 300.,
         },
+        BulletShooter,
     ));
 }
