@@ -7,8 +7,6 @@ pub struct Damageable {
     pub delta: f32,
 }
 
-// TODO: debug health bar
-
 fn apply_delta(mut damageables: Query<&mut Damageable>) {
     for mut damageable in damageables.iter_mut() {
         damageable.health += damageable.delta;

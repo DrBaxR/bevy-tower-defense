@@ -28,7 +28,7 @@ fn main() {
             cell_size: 20.,
             map_file_path: "assets/full_size.map",
         })
-        .add_plugin(HealthPlugin { debug: false })
+        .add_plugin(HealthPlugin { debug: true })
         // other
         .insert_resource(SpawnTimer(Timer::from_seconds(10., TimerMode::Repeating)))
         .add_startup_system_set(
