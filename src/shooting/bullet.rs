@@ -1,50 +1,9 @@
-use std::time::Duration;
-
 use bevy::{ecs::query::QueryIter, prelude::*};
 
-use crate::{health::DamageDealer, lifetime::Lifetime};
+use super::{Shooter, Targetable, Bullet, bundle::BulletBundle};
 
-#[derive(Reflect, Component)]
-pub struct Bullet {
-    pub trajectory: Vec2,
-}
 
-#[derive(Bundle)]
-pub struct BulletBundle {
-    pub name: Name,
-    pub bullet: Bullet,
-    pub lifetime: Lifetime,
-    #[bundle]
-    pub sprite: SpriteBundle,
-    pub damage_dealer: DamageDealer,
-}
-
-impl BulletBundle {
-    pub fn new(position: Vec3, target: &Vec3, speed: f32) -> Self {
-        let trajectory =
-            Vec2::new(target.x - position.x, target.y - position.y).normalize() * speed;
-
-        BulletBundle {
-            name: Name::new("Bullet"),
-            bullet: Bullet { trajectory },
-            lifetime: Lifetime {
-                timer: Timer::new(Duration::from_millis(5000), TimerMode::Once),
-            },
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::GRAY,
-                    ..default()
-                },
-                transform: Transform::from_translation(position)
-                    .with_scale(Vec3::new(10., 10., 1.)),
-                ..default()
-            },
-            damage_dealer: DamageDealer { damage: 10. },
-        }
-    }
-}
-
-fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &Bullet)>) {
+pub fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &Bullet)>) {
     for (mut transform, bullet) in bullets.iter_mut() {
         transform.translation.x =
             transform.translation.x + bullet.trajectory.x * time.delta_seconds();
@@ -53,17 +12,7 @@ fn update_bullet_position(time: Res<Time>, mut bullets: Query<(&mut Transform, &
     }
 }
 
-#[derive(Component)]
-pub struct Shooter {
-    pub cooldown: Timer,
-    pub range: f32,
-    pub target: Option<Vec3>,
-}
-
-#[derive(Component)]
-pub struct Targetable;
-
-fn shoot_bullet(
+pub fn shoot_bullet(
     mut commands: Commands,
     time: Res<Time>,
     mut shooters: Query<(&Transform, &mut Shooter)>,
@@ -87,8 +36,7 @@ fn shoot_bullet(
     }
 }
 
-fn compute_target(
-    mut shooters: Query<(&Transform, &mut Shooter)>,
+pub fn compute_target( mut shooters: Query<(&Transform, &mut Shooter)>,
     targetables: Query<&Transform, With<Targetable>>,
 ) {
     for (transform, mut shooter) in shooters.iter_mut() {
@@ -130,15 +78,4 @@ fn get_shortest_distance_for(
     }
 
     shortest
-}
-
-pub struct BulletPlugin;
-
-impl Plugin for BulletPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_system(update_bullet_position)
-            .add_system(compute_target)
-            .add_system(shoot_bullet)
-            .register_type::<Bullet>();
-    }
 }

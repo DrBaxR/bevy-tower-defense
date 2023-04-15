@@ -2,12 +2,12 @@ use std::time::Duration;
 
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 
-use bullet::{Shooter, Targetable};
 use cursor::*;
 use grid::{a_star::GridCoord, agent::GridAgent, DebugGrid};
 use health::Damageable;
+use shooting::{Targetable, Shooter};
 
-pub mod bullet;
+pub mod shooting;
 pub mod cursor;
 pub mod grid;
 pub mod health;
@@ -116,7 +116,6 @@ pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
     let grid = grid.single();
     let pos = grid.to_screen_coords(33, 20);
 
-    // TODO: make bullets damage enemies
     commands.spawn((
         Name::new("Tower"),
         SpriteBundle {
