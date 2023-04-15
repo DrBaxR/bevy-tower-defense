@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 
-use super::{Shooter, bundle::BulletBundle, BulletShooter};
+use super::{Shooter, bundle::BulletBundle};
 
 #[derive(Reflect, Component)]
 pub struct Bullet;
+
+#[derive(Reflect, Component)]
+pub struct BulletShooter;
 
 pub fn shoot_bullet(
     mut commands: Commands,

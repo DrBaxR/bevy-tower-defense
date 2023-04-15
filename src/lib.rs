@@ -5,7 +5,7 @@ use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 use cursor::*;
 use grid::{a_star::GridCoord, agent::GridAgent, DebugGrid};
 use health::Damageable;
-use shooting::{Targetable, Shooter, BulletShooter};
+use shooting::{Targetable, Shooter, bomb::BombShooter};
 
 pub mod shooting;
 pub mod cursor;
@@ -127,10 +127,10 @@ pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
             ..default()
         },
         Shooter {
-            cooldown: Timer::new(Duration::from_millis(1000), TimerMode::Repeating),
+            cooldown: Timer::new(Duration::from_millis(5000), TimerMode::Repeating),
             target: None,
             range: 300.,
         },
-        BulletShooter,
+        BombShooter,
     ));
 }

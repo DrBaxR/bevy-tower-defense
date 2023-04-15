@@ -1,8 +1,9 @@
 use bevy::{prelude::*, ecs::query::QueryIter};
 
-use self::bullet::shoot_bullet;
+use self::{bullet::shoot_bullet, bomb::{shoot_bomb, explode_bomb}};
 
 pub mod bullet;
+pub mod bomb;
 pub mod bundle;
 
 #[derive(Reflect, Component)]
@@ -18,10 +19,6 @@ fn update_shootable_position(time: Res<Time>, mut bullets: Query<(&mut Transform
             transform.translation.y + bullet.trajectory.y * time.delta_seconds();
     }
 }
-
-
-#[derive(Reflect, Component)]
-pub struct BulletShooter;
 
 #[derive(Component)]
 pub struct Shooter {
@@ -84,6 +81,8 @@ impl Plugin for ShootingPlugin {
         app.add_system(update_shootable_position)
             .add_system(compute_target)
             .add_system(shoot_bullet)
+            .add_system(shoot_bomb)
+            .add_system(explode_bomb)
             .register_type::<Shootable>();
     }
 }
