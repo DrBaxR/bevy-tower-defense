@@ -6,13 +6,15 @@ In order to run the game, all you need is to have Rust installed on your machine
 
 ## Goals
 Only after these are done will the first version be released:
-- [ ] Base systems
+- [x] Base systems:
     - [x] Pathfinding
     - [x] Shooting
-    - [ ] Health
-- [ ] At least 5 types of towers
-- [ ] At least 3 types of enemies
-- [ ] At least 3 worlds with 5 level layouts each
-- [ ] Multiple screens & UI
-- [ ] Progression system
-- [ ] Graphics & Sound
+    - [x] Health
+- [ ] Gameplay:
+    - [ ] Be able to place towers however you want
+    - [ ] At least 5 types of towers
+    - [ ] At least 3 types of enemies
+    - [ ] At least 3 worlds with 5 level layouts each
+    - [ ] Multiple screens & UI
+    - [ ] Progression system
+    - [ ] Graphics & Sound

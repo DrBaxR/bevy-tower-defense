@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use tower_defense::{
-    bullet::BulletPlugin, cursor::CursorPlugin, grid::GridPlugin, lifetime::LifetimePlugin,
-    setup_camera, setup_entities, setup_tower, constantly_spawn_enemies, SpawnTimer, health::HealthPlugin,
+    bullet::BulletPlugin, constantly_spawn_enemies, cursor::CursorPlugin, grid::GridPlugin,
+    health::HealthPlugin, lifetime::LifetimePlugin, setup_camera, setup_entities, setup_tower,
+    SpawnTimer,
 };
 
 fn main() {
@@ -28,14 +29,14 @@ fn main() {
             cell_size: 20.,
             map_file_path: "assets/full_size.map",
         })
-        .add_plugin(HealthPlugin { debug: true })
+        .add_plugin(HealthPlugin { debug: false })
         // other
         .insert_resource(SpawnTimer(Timer::from_seconds(10., TimerMode::Repeating)))
         .add_startup_system_set(
             SystemSet::new()
                 .with_system(setup_camera)
                 .with_system(setup_entities)
-                .with_system(setup_tower)
+                .with_system(setup_tower),
         )
         .add_system(constantly_spawn_enemies)
         .run();

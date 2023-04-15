@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{ecs::query::QueryIter, prelude::*};
 
-use crate::lifetime::Lifetime;
+use crate::{health::DamageDealer, lifetime::Lifetime};
 
 #[derive(Reflect, Component)]
 pub struct Bullet {
@@ -16,6 +16,7 @@ pub struct BulletBundle {
     pub lifetime: Lifetime,
     #[bundle]
     pub sprite: SpriteBundle,
+    pub damage_dealer: DamageDealer,
 }
 
 impl BulletBundle {
@@ -38,6 +39,7 @@ impl BulletBundle {
                     .with_scale(Vec3::new(10., 10., 1.)),
                 ..default()
             },
+            damage_dealer: DamageDealer { damage: 10. },
         }
     }
 }
