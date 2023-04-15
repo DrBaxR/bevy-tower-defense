@@ -1,4 +1,4 @@
-# Tower Defense
+# Tower Defense (nstc)
 A tower defense game made in Rust with the [Bevy](https://bevyengine.org) game engine.
 
 ## Run
