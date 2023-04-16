@@ -3,7 +3,10 @@ use std::time::Duration;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 
-use crate::{health::Damageable, lifetime::Lifetime};
+use crate::{
+    health::{DamageDealer, Damageable},
+    lifetime::Lifetime,
+};
 
 use super::{bundle::BombBundle, Shooter};
 
@@ -58,6 +61,12 @@ pub fn explode_bomb(
             ))
             .is_some()
             {
+                let explosion_transform = Transform {
+                    translation: damageable_transform.translation,
+                    scale: Vec3::new(100., 100., 1.),
+                    ..default()
+                };
+
                 commands.entity(bomb_entity).despawn();
                 commands.spawn((
                     SpriteBundle {
@@ -65,19 +74,21 @@ pub fn explode_bomb(
                             color: Color::BLUE,
                             ..default()
                         },
-                        transform: Transform {
-                            translation: bomb_transform.translation,
-                            scale: Vec3::new(100., 100., 1.),
-                            ..default()
-                        },
+                        transform: explosion_transform.clone(),
                         ..default()
                     },
                     Lifetime {
-                        timer: Timer::new(Duration::from_millis(1000), TimerMode::Once),
+                        timer: Timer::new(Duration::from_millis(500), TimerMode::Once),
                     },
                 ));
 
-                // TODO: also create explosion damager entity
+                commands.spawn((
+                    TransformBundle {
+                        local: explosion_transform.clone(),
+                        ..default()
+                    },
+                    DamageDealer { damage: 50. },
+                ));
             }
         }
     }

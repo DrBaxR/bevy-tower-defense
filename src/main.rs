@@ -31,7 +31,7 @@ fn main() {
         })
         .add_plugin(HealthPlugin { debug: false })
         // other
-        .insert_resource(SpawnTimer(Timer::from_seconds(10., TimerMode::Repeating)))
+        .insert_resource(SpawnTimer(Timer::from_seconds(0.5, TimerMode::Repeating)))
         .add_startup_system_set(
             SystemSet::new()
                 .with_system(setup_camera)

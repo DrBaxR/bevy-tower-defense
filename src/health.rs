@@ -18,15 +18,15 @@ fn apply_damage_on_collision(
     mut damageables: Query<(&mut Damageable, &Transform)>,
     damage_dealers: Query<(Entity, &DamageDealer, &Transform)>,
 ) {
-    for (mut damageable, damageable_transform) in damageables.iter_mut() {
-        let damageable_size = Vec2::new(damageable_transform.scale.x, damageable_transform.scale.y);
+    for (damage_dealer_entity, damage_dealer, damage_dealer_transform) in damage_dealers.iter() {
+        let damage_dealer_size = Vec2::new(
+            damage_dealer_transform.scale.x,
+            damage_dealer_transform.scale.y,
+        );
 
-        for (damage_dealer_entity, damage_dealer, damage_dealer_transform) in damage_dealers.iter()
-        {
-            let damage_dealer_size = Vec2::new(
-                damage_dealer_transform.scale.x,
-                damage_dealer_transform.scale.y,
-            );
+        for (mut damageable, damageable_transform) in damageables.iter_mut() {
+            let damageable_size =
+                Vec2::new(damageable_transform.scale.x, damageable_transform.scale.y);
 
             if collide(
                 damageable_transform.translation,
@@ -37,9 +37,10 @@ fn apply_damage_on_collision(
             .is_some()
             {
                 damageable.delta -= damage_dealer.damage;
-                commands.entity(damage_dealer_entity).despawn();
             }
         }
+
+        commands.entity(damage_dealer_entity).despawn();
     }
 }
 

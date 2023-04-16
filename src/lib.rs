@@ -127,7 +127,7 @@ pub fn setup_tower(mut commands: Commands, grid: Query<&DebugGrid>) {
             ..default()
         },
         Shooter {
-            cooldown: Timer::new(Duration::from_millis(5000), TimerMode::Repeating),
+            cooldown: Timer::new(Duration::from_millis(1000), TimerMode::Repeating),
             target: None,
             range: 300.,
         },

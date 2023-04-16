@@ -11,15 +11,15 @@ Only after these are done will the first version be released:
     - [x] Shooting
     - [x] Health
 - [ ] Gameplay:
-    - [ ] Be able to place towers however you want
     - [ ] At least 5 types of towers
         - [x] Bullet tower
-        - [ ] Bomb tower
+        - [x] Bomb tower
         - [ ] Homing tower
         - [ ] ???
         - [ ] ???
     - [ ] At least 3 types of enemies
     - [ ] At least 3 worlds with 5 level layouts each
     - [ ] Multiple screens & UI
+    - [ ] Be able to place towers however you want
     - [ ] Progression system
     - [ ] Graphics & Sound
