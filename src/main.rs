@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use tower_defense::{
     shooting::ShootingPlugin, constantly_spawn_enemies, cursor::CursorPlugin, grid::GridPlugin,
     health::HealthPlugin, lifetime::LifetimePlugin, setup_camera, setup_entities, setup_tower,
@@ -19,7 +18,7 @@ fn main() {
             },
             ..default()
         }))
-        .add_plugin(WorldInspectorPlugin)
+        // .add_plugin(WorldInspectorPlugin)
         // game plugins
         .add_plugin(CursorPlugin)
         .add_plugin(ShootingPlugin)

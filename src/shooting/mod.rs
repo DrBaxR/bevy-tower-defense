@@ -4,7 +4,6 @@ use self::{bullet::shoot_bullet, bomb::{shoot_bomb, explode_bomb}};
 
 pub mod bullet;
 pub mod bomb;
-pub mod bundle;
 
 #[derive(Reflect, Component)]
 pub struct Shootable {

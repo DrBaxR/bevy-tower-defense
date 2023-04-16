@@ -8,13 +8,48 @@ use crate::{
     lifetime::Lifetime,
 };
 
-use super::{bundle::BombBundle, Shooter};
+use super::{Shooter, Shootable};
 
 #[derive(Component)]
 pub struct Bomb;
 
 #[derive(Component)]
 pub struct BombShooter;
+
+#[derive(Bundle)]
+pub struct BombBundle {
+    pub name: Name,
+    pub shootable: Shootable,
+    pub lifetime: Lifetime,
+    #[bundle]
+    pub sprite: SpriteBundle,
+    pub bomb: Bomb,
+}
+
+impl BombBundle {
+    pub fn new(position: Vec3, target: &Vec3, speed: f32) -> Self {
+        let trajectory =
+            Vec2::new(target.x - position.x, target.y - position.y).normalize() * speed;
+
+        BombBundle {
+            name: Name::new("Bullet"),
+            shootable: Shootable { trajectory },
+            lifetime: Lifetime {
+                timer: Timer::new(Duration::from_millis(5000), TimerMode::Once),
+            },
+            sprite: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::YELLOW,
+                    ..default()
+                },
+                transform: Transform::from_translation(position)
+                    .with_scale(Vec3::new(10., 10., 1.)),
+                ..default()
+            },
+            bomb: Bomb,
+        }
+    }
+}
 
 pub fn shoot_bomb(
     mut commands: Commands,
